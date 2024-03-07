@@ -35,7 +35,7 @@ void Window::initialise()
 	// Core Profile
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	// Allow forward compatiblity
-	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 	// Create the window
 	_mainWindow = glfwCreateWindow(_width, _height, "OpenGL Lighting", NULL, NULL);
@@ -54,7 +54,7 @@ void Window::initialise()
 
 	// Handle Key + Mouse Input
 	createCallbacks();
-	//glfwSetInputMode(_mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	// glfwSetInputMode(_mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// Allow modern extension access
 	glewExperimental = GL_TRUE;
@@ -68,7 +68,7 @@ void Window::initialise()
 	}
 
 	glEnable(GL_DEPTH_TEST);
-	//glCullFace(GL_BACK);
+	glCullFace(GL_BACK);
 
 	// Create Viewport
 	glViewport(0, 0, _bufferWidth, _bufferHeight);
