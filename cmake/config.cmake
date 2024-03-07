@@ -23,6 +23,21 @@ macro(make_executable)
     install(
         TARGETS ${PROJECT}
         DESTINATION "${CMAKE_SOURCE_DIR}/bundle")
+        
+    add_custom_command(
+        TARGET ${PROJECT}
+        PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+            ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+            ${CMAKE_CURRENT_BINARY_DIR}/shaders)
+    
+    add_custom_command(
+        TARGET ${PROJECT}
+        PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+            ${CMAKE_CURRENT_SOURCE_DIR}/textures
+            ${CMAKE_CURRENT_BINARY_DIR}/textures)
+
 endmacro()
 
 function(add_all_subdirectories)
