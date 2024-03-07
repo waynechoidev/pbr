@@ -1,38 +1,30 @@
 #include "window.h"
 
-Window::Window()
-{
-	width = 800;
-	height = 600;
-
-	for (size_t i = 0; i < 1024; i++)
-	{
-		keys[i] = 0;
-	}
-
-	xChange = 0.0f;
-	yChange = 0.0f;
-}
-
 Window::Window(GLint windowWidth, GLint windowHeight)
 {
-	width = windowWidth;
-	height = windowHeight;
+	_width = windowWidth;
+	_height = windowHeight;
+	
+	_bufferWidth = _bufferHeight = 0;
+	_mainWindow = 0;
 
 	for (size_t i = 0; i < 1024; i++)
 	{
-		keys[i] = 0;
+		_keys[i] = 0;
 	}
 
-	xChange = 0.0f;
-	yChange = 0.0f;
+	_xChange = 0;
+	_yChange = 0;
+	_lastX = 0;
+	_lastY = 0;
+	_mouseFirstMoved = false;
 }
 
-void Window::Initialise()
+void Window::initialise()
 {
 	if (!glfwInit())
 	{
-		printf("Error Initialising GLFW");
+		std::cout << "Error Initialising GLFW";
 		glfwTerminate();
 	}
 
@@ -43,25 +35,26 @@ void Window::Initialise()
 	// Core Profile
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	// Allow forward compatiblity
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 	// Create the window
-	mainWindow = glfwCreateWindow(width, height, "Test Window", NULL, NULL);
-	if (!mainWindow)
+	_mainWindow = glfwCreateWindow(_width, _height, "OpenGL Lighting", NULL, NULL);
+
+	if (!_mainWindow)
 	{
-		printf("Error creating GLFW window!");
+		std::cout << "Error creating GLFW window!";
 		glfwTerminate();
 	}
 
 	// Get buffer size information
-	glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
+	glfwGetFramebufferSize(_mainWindow, &_bufferWidth, &_bufferHeight);
 
 	// Set the current context
-	glfwMakeContextCurrent(mainWindow);
+	glfwMakeContextCurrent(_mainWindow);
 
 	// Handle Key + Mouse Input
 	createCallbacks();
-	// glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(_mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// Allow modern extension access
 	glewExperimental = GL_TRUE;
@@ -69,42 +62,50 @@ void Window::Initialise()
 	GLenum error = glewInit();
 	if (error != GLEW_OK)
 	{
-		printf("Error: %s", glewGetErrorString(error));
-		glfwDestroyWindow(mainWindow);
+		std::cout << "Error: %s" << glewGetErrorString(error);
+		glfwDestroyWindow(_mainWindow);
 		glfwTerminate();
 	}
 
 	glEnable(GL_DEPTH_TEST);
+	//glCullFace(GL_BACK);
 
 	// Create Viewport
-	glViewport(0, 0, bufferWidth, bufferHeight);
+	glViewport(0, 0, _bufferWidth, _bufferHeight);
 
-	glfwSetWindowUserPointer(mainWindow, this);
+	glfwSetWindowUserPointer(_mainWindow, this);
+
+}
+
+void Window::clear(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+{
+	glClearColor(red, green, blue, alpha);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void Window::createCallbacks()
 {
-	glfwSetKeyCallback(mainWindow, handleKeys);
-	glfwSetCursorPosCallback(mainWindow, handleMouse);
+	glfwSetKeyCallback(_mainWindow, handleKeys);
+	glfwSetCursorPosCallback(_mainWindow, handleMouse);
 }
 
 GLfloat Window::getXChange()
 {
-	GLfloat theChange = xChange;
-	xChange = 0.0f;
+	GLfloat theChange = _xChange;
+	_xChange = 0.0f;
 	return theChange;
 }
 
 GLfloat Window::getYChange()
 {
-	GLfloat theChange = yChange;
-	yChange = 0.0f;
+	GLfloat theChange = _yChange;
+	_yChange = 0.0f;
 	return theChange;
 }
 
-void Window::handleKeys(GLFWwindow *window, int key, int code, int action, int mode)
+void Window::handleKeys(GLFWwindow* window, int key, int code, int action, int mode)
 {
-	Window *theWindow = static_cast<Window *>(glfwGetWindowUserPointer(window));
+	Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 	{
@@ -115,35 +116,35 @@ void Window::handleKeys(GLFWwindow *window, int key, int code, int action, int m
 	{
 		if (action == GLFW_PRESS)
 		{
-			theWindow->keys[key] = true;
+			theWindow->_keys[key] = true;
 		}
 		else if (action == GLFW_RELEASE)
 		{
-			theWindow->keys[key] = false;
+			theWindow->_keys[key] = false;
 		}
 	}
 }
 
-void Window::handleMouse(GLFWwindow *window, double xPos, double yPos)
+void Window::handleMouse(GLFWwindow* window, double xPos, double yPos)
 {
-	Window *theWindow = static_cast<Window *>(glfwGetWindowUserPointer(window));
+	Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
-	if (theWindow->mouseFirstMoved)
+	if (theWindow->_mouseFirstMoved)
 	{
-		theWindow->lastX = xPos;
-		theWindow->lastY = yPos;
-		theWindow->mouseFirstMoved = false;
+		theWindow->_lastX = xPos;
+		theWindow->_lastY = yPos;
+		theWindow->_mouseFirstMoved = false;
 	}
 
-	theWindow->xChange = xPos - theWindow->lastX;
-	theWindow->yChange = theWindow->lastY - yPos;
+	theWindow->_xChange = xPos - theWindow->_lastX;
+	theWindow->_yChange = theWindow->_lastY - yPos;
 
-	theWindow->lastX = xPos;
-	theWindow->lastY = yPos;
+	theWindow->_lastX = xPos;
+	theWindow->_lastY = yPos;
 }
 
 Window::~Window()
 {
-	glfwDestroyWindow(mainWindow);
+	glfwDestroyWindow(_mainWindow);
 	glfwTerminate();
 }
