@@ -7,12 +7,11 @@
 class Gui
 {
 public:
-	Gui() {};
-	
-	void initialise(GLFWwindow* window);
-	void update(bool& useTexture);
+	Gui(){};
+
+	void initialise(GLFWwindow *window);
+	void update(bool &useTexture);
 	void render();
 
-	~Gui() {};
+	~Gui(){};
 };
-

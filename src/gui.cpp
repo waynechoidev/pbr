@@ -1,9 +1,9 @@
 #include "gui.h"
 
-void Gui::initialise(GLFWwindow* window)
+void Gui::initialise(GLFWwindow *window)
 {
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
+	ImGuiIO &io = ImGui::GetIO();
 	(void)io;
 	io.FontGlobalScale = 1.5f;
 
@@ -11,7 +11,7 @@ void Gui::initialise(GLFWwindow* window)
 	ImGui_ImplOpenGL3_Init("#version 130");
 }
 
-void Gui::update(bool& useTexture)
+void Gui::update(bool &useTexture)
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();

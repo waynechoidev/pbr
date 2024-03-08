@@ -8,4 +8,6 @@ endif ()
 
 include(cmake/glfw.cmake)
 include(cmake/glew.cmake)
+include(cmake/glm.cmake)
 include(cmake/imgui.cmake)
+include(cmake/stb.cmake)

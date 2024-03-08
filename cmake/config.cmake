@@ -39,13 +39,3 @@ macro(make_executable)
             ${CMAKE_CURRENT_BINARY_DIR}/textures)
 
 endmacro()
-
-function(add_all_subdirectories)
-    file(GLOB CHILDREN RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*)
-
-    foreach(CHILD ${CHILDREN})
-        if (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${CHILD})
-            add_subdirectory(${CHILD})
-        endif ()
-    endforeach ()
-endfunction()

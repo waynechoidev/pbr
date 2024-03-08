@@ -18,9 +18,9 @@ public:
 	GLint getBufferHeight() { return _bufferHeight; }
 
 	bool getShouldClose() { return glfwWindowShouldClose(_mainWindow); }
-	GLFWwindow* getWindow() { return _mainWindow; }
+	GLFWwindow *getWindow() { return _mainWindow; }
 
-	bool* getsKeys() { return _keys; }
+	bool *getsKeys() { return _keys; }
 	GLfloat getXChange();
 	GLfloat getYChange();
 
@@ -31,7 +31,7 @@ public:
 	~Window();
 
 private:
-	GLFWwindow* _mainWindow;
+	GLFWwindow *_mainWindow;
 
 	GLint _width, _height;
 	GLint _bufferWidth, _bufferHeight;
@@ -45,6 +45,6 @@ private:
 	bool _mouseFirstMoved;
 
 	void createCallbacks();
-	static void handleKeys(GLFWwindow* window, int key, int code, int action, int mode);
-	static void handleMouse(GLFWwindow* window, double xPos, double yPos);
+	static void handleKeys(GLFWwindow *window, int key, int code, int action, int mode);
+	static void handleMouse(GLFWwindow *window, double xPos, double yPos);
 };

@@ -4,7 +4,7 @@ Window::Window(GLint windowWidth, GLint windowHeight)
 {
 	_width = windowWidth;
 	_height = windowHeight;
-	
+
 	_bufferWidth = _bufferHeight = 0;
 	_mainWindow = 0;
 
@@ -74,7 +74,6 @@ void Window::initialise()
 	glViewport(0, 0, _bufferWidth, _bufferHeight);
 
 	glfwSetWindowUserPointer(_mainWindow, this);
-
 }
 
 void Window::clear(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
@@ -103,9 +102,9 @@ GLfloat Window::getYChange()
 	return theChange;
 }
 
-void Window::handleKeys(GLFWwindow* window, int key, int code, int action, int mode)
+void Window::handleKeys(GLFWwindow *window, int key, int code, int action, int mode)
 {
-	Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+	Window *theWindow = static_cast<Window *>(glfwGetWindowUserPointer(window));
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 	{
@@ -125,9 +124,9 @@ void Window::handleKeys(GLFWwindow* window, int key, int code, int action, int m
 	}
 }
 
-void Window::handleMouse(GLFWwindow* window, double xPos, double yPos)
+void Window::handleMouse(GLFWwindow *window, double xPos, double yPos)
 {
-	Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+	Window *theWindow = static_cast<Window *>(glfwGetWindowUserPointer(window));
 
 	if (theWindow->_mouseFirstMoved)
 	{
