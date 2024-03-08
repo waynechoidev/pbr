@@ -9,11 +9,9 @@
 #include "texture.h"
 #include "camera.h"
 
-bool useTexture = false;
-
 int main()
 {
-	Window mainWindow = Window(1366, 768);
+	Window mainWindow = Window(1920, 1080);
 	mainWindow.initialise();
 
 	Gui gui = Gui();
@@ -27,14 +25,15 @@ int main()
 	Program mainProgram = Program();
 	mainProgram.createFromFiles(currentDir / "shaders/vert.glsl", currentDir / "shaders/frag.glsl");
 	mainProgram.genVertexBuffers();
+	mainProgram.genFragmentBuffers();
 
 	Texture earthTexture = Texture();
 	earthTexture.initialise(currentDir / "textures/map.jpg");
 
 	// Model
-	glm::vec3 translation = {0.0f, 0.0f, 0.0f};
-	glm::vec3 scaling = {0.4f, 0.4f, 0.4f};
-	glm::vec3 rotation = {0.0f, 0.0f, 0.0f};
+	glm::vec3 translation = glm::vec3(0.0f);
+	glm::vec3 scaling = glm::vec3(0.6f);
+	glm::vec3 rotation = {0.7f, 2.5f, 0.0f};
 
 	// Projection
 	float aspectRatio = (GLfloat)mainWindow.getBufferWidth() / mainWindow.getBufferHeight();
@@ -42,13 +41,39 @@ int main()
 
 	Camera camera = Camera(glm::vec3(0.0f, 0.0f, 2.5f), glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3(0.0f, 0.0f, -1.0f));
 
+	// Material
+	Material material;
+	material.ambient = 0.1f;
+	material.shininess = 1.0f;
+	material.diffuse = 1.0f;
+	material.specular = 1.0f;
+
+	// Light
+	Light light;
+	light.position = {0.0f, 0.0f, 2.0f};
+	light.direction = {0.0f, 0.0f, -1.0f};
+	light.strength = 1.0;
+	light.fallOffStart = 0.0f;
+	light.fallOffEnd = 10.0f;
+	light.spotPower = 1.0f;
+	light.isDirectional = 1;
+	light.isPoint = 0;
+	light.isSpot = 0;
+	light.useBlinnPhong = true;
+
+	// Control
+	bool useTexture = true;
+	bool wireFrame = false;
+
 	while (!mainWindow.getShouldClose())
 	{
 		glfwPollEvents();
 
-		gui.update(useTexture);
+		gui.update(useTexture, wireFrame, translation.x, scaling.x, rotation.x, material, light);
 
 		mainWindow.clear(0.0f, 0.0f, 0.0f, 1.0f);
+
+		glPolygonMode(GL_FRONT_AND_BACK, wireFrame ? GL_LINE : GL_FILL);
 
 		// Model
 		glm::mat4 model = glm::mat4(1.0f);
@@ -60,7 +85,7 @@ int main()
 
 		mainProgram.use();
 		mainProgram.bindVertexBuffers(model, projection, camera.calculateViewMatrix());
-		// mainProgram.bindFragmentBuffers(useTexture, camera.getPosition(), material);
+		mainProgram.bindFragmentBuffers(useTexture, camera.getPosition(), material, light);
 		earthTexture.use();
 		sphere.draw();
 		gui.render();

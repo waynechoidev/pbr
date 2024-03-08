@@ -28,7 +28,7 @@ std::string Program::readFile(std::string fileLocation)
 
 	if (!fileStream.is_open())
 	{
-		std::cout << "Failed to read " << fileLocation << "! File doesn't exist." << std::endl;
+		std::cout << "Failed to read %s! File doesn't exist." << fileLocation;
 		return "";
 	}
 
@@ -49,7 +49,7 @@ void Program::compileShader(std::string vertexCode, std::string fragmentCode)
 
 	if (!_programID)
 	{
-		std::cout << "Error creating shader program!" << std::endl;
+		std::cout << "Error creating shader program!\n";
 		return;
 	}
 
@@ -64,7 +64,8 @@ void Program::compileShader(std::string vertexCode, std::string fragmentCode)
 	if (!result)
 	{
 		glGetProgramInfoLog(_programID, sizeof(eLog), NULL, eLog);
-		std::cout << "Error linking program: " << eLog << std::endl;
+		std::cout << "Error linking program: '%s'\n"
+				  << eLog;
 		return;
 	}
 
@@ -73,7 +74,8 @@ void Program::compileShader(std::string vertexCode, std::string fragmentCode)
 	if (!result)
 	{
 		glGetProgramInfoLog(_programID, sizeof(eLog), NULL, eLog);
-		std::cout << "Error validating program: " << eLog << std::endl;
+		std::cout << "Error validating program: '%s'\n"
+				  << eLog;
 		return;
 	}
 }
@@ -82,7 +84,7 @@ void Program::genVertexBuffers()
 {
 	glGenBuffers(1, &_uboMatrices);
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboMatrices);
-	glBufferData(GL_UNIFORM_BUFFER, 192, nullptr, GL_STATIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, 192, nullptr, GL_DYNAMIC_DRAW);
 	GLuint matricesBlockIndex = glGetUniformBlockIndex(_programID, "Matrices");
 	glUniformBlockBinding(_programID, matricesBlockIndex, 0);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, _uboMatrices);
@@ -106,6 +108,13 @@ void Program::genFragmentBuffers()
 	glUniformBlockBinding(_programID, materialBlockIndex, 2);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 2, _uboMaterial);
 
+	glGenBuffers(1, &_uboLight);
+	glBindBuffer(GL_UNIFORM_BUFFER, _uboLight);
+	glBufferData(GL_UNIFORM_BUFFER, 56, nullptr, GL_DYNAMIC_DRAW);
+	GLuint lightBlockIndex = glGetUniformBlockIndex(_programID, "Light");
+	glUniformBlockBinding(_programID, lightBlockIndex, 3);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 3, _uboLight);
+
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
@@ -120,11 +129,9 @@ void Program::bindVertexBuffers(glm::mat4 model, glm::mat4 projection, glm::mat4
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, glm::value_ptr(model));
 	glBufferSubData(GL_UNIFORM_BUFFER, 64, 64, glm::value_ptr(view));
 	glBufferSubData(GL_UNIFORM_BUFFER, 128, 64, glm::value_ptr(projection));
-
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void Program::bindFragmentBuffers(bool useTexture, glm::vec3 viewPosition, const Material &material)
+void Program::bindFragmentBuffers(bool useTexture, glm::vec3 viewPosition, const Material &material, const Light &light)
 {
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboFragment);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, 12, glm::value_ptr(viewPosition));
@@ -137,6 +144,19 @@ void Program::bindFragmentBuffers(bool useTexture, glm::vec3 viewPosition, const
 	glBufferSubData(GL_UNIFORM_BUFFER, 8, 4, &material.diffuse);
 	glBufferSubData(GL_UNIFORM_BUFFER, 12, 4, &material.specular);
 
+	glBindBuffer(GL_UNIFORM_BUFFER, _uboLight);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, 12, glm::value_ptr(light.position));
+	glBufferSubData(GL_UNIFORM_BUFFER, 12, 4, &light.strength);
+	glBufferSubData(GL_UNIFORM_BUFFER, 16, 12, glm::value_ptr(light.direction));
+	glBufferSubData(GL_UNIFORM_BUFFER, 28, 4, &light.fallOffStart);
+	glBufferSubData(GL_UNIFORM_BUFFER, 32, 4, &light.fallOffEnd);
+	glBufferSubData(GL_UNIFORM_BUFFER, 36, 4, &light.spotPower);
+	glBufferSubData(GL_UNIFORM_BUFFER, 40, 4, &light.isDirectional);
+	glBufferSubData(GL_UNIFORM_BUFFER, 44, 4, &light.isPoint);
+	glBufferSubData(GL_UNIFORM_BUFFER, 48, 4, &light.isSpot);
+	int useBlinnPhongInt = light.useBlinnPhong ? 1 : 0;
+	glBufferSubData(GL_UNIFORM_BUFFER, 52, 4, &useBlinnPhongInt);
+
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
@@ -148,7 +168,7 @@ void Program::clear()
 		_programID = 0;
 	}
 
-	_uboMatrices = _uboFragment = _uboMaterial = 0;
+	_uboMatrices = _uboFragment = _uboMaterial = _uboLight = 0;
 }
 
 void Program::addShader(GLuint theProgram, std::string shaderCode, GLenum shaderType)
@@ -171,7 +191,8 @@ void Program::addShader(GLuint theProgram, std::string shaderCode, GLenum shader
 	if (!result)
 	{
 		glGetShaderInfoLog(theShader, sizeof(eLog), NULL, eLog);
-		std::cout << "Error compiling the " << shaderType << " shader: " << eLog << std::endl;
+		std::cout << "Error compiling the %d shader: '%s'\n"
+				  << shaderType << eLog;
 		return;
 	}
 

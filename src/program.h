@@ -26,13 +26,13 @@ public:
 	void genFragmentBuffers();
 	void use();
 	void bindVertexBuffers(glm::mat4 model, glm::mat4 projection, glm::mat4 view);
-	void bindFragmentBuffers(bool useTexture, glm::vec3 viewPosition, const Material &material);
+	void bindFragmentBuffers(bool useTexture, glm::vec3 viewPosition, const Material &material, const Light &light);
 
 	~Program();
 
 private:
 	GLuint _programID;
-	GLuint _uboMatrices, _uboFragment, _uboMaterial;
+	GLuint _uboMatrices, _uboFragment, _uboMaterial, _uboLight;
 
 	void compileShader(std::string vertexCode, std::string fragmentCode);
 	void addShader(GLuint theProgram, std::string shaderCode, GLenum shaderType);
