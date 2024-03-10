@@ -62,7 +62,7 @@ void Window::initialise()
 	GLenum error = glewInit();
 	if (error != GLEW_OK)
 	{
-		std::cout << "Error: %s" << glewGetErrorString(error);
+		std::cout << "Error: " << glewGetErrorString(error) << std::endl;
 		glfwDestroyWindow(_mainWindow);
 		glfwTerminate();
 	}

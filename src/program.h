@@ -17,7 +17,6 @@ class Program
 public:
 	Program();
 
-	void createFromString(std::string vertexCode, std::string fragmentCode);
 	void createFromFiles(std::string vertexLocation, std::string fragmentLocation);
 
 	std::string readFile(std::string fileLocation);

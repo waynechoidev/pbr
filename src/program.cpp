@@ -6,17 +6,10 @@ Program::Program()
 	clear();
 }
 
-void Program::createFromString(std::string vertexCode, std::string fragmentCode)
-{
-	compileShader(vertexCode, fragmentCode);
-}
-
 void Program::createFromFiles(std::string vertexLocation, std::string fragmentLocation)
 {
-	std::string vertexString = readFile(vertexLocation);
-	std::string fragmentString = readFile(fragmentLocation);
-	const char *vertexCode = vertexString.c_str();
-	const char *fragmentCode = fragmentString.c_str();
+	std::string vertexCode = readFile(vertexLocation);
+	std::string fragmentCode = readFile(fragmentLocation);
 
 	compileShader(vertexCode, fragmentCode);
 }
@@ -28,7 +21,7 @@ std::string Program::readFile(std::string fileLocation)
 
 	if (!fileStream.is_open())
 	{
-		std::cout << "Failed to read %s! File doesn't exist." << fileLocation;
+		std::cout << "Failed to read " << fileLocation << "! File doesn't exist." << std::endl;
 		return "";
 	}
 
@@ -64,8 +57,7 @@ void Program::compileShader(std::string vertexCode, std::string fragmentCode)
 	if (!result)
 	{
 		glGetProgramInfoLog(_programID, sizeof(eLog), NULL, eLog);
-		std::cout << "Error linking program: '%s'\n"
-				  << eLog;
+		std::cout << "Error linking program: " << eLog << std::endl;
 		return;
 	}
 
@@ -74,8 +66,7 @@ void Program::compileShader(std::string vertexCode, std::string fragmentCode)
 	if (!result)
 	{
 		glGetProgramInfoLog(_programID, sizeof(eLog), NULL, eLog);
-		std::cout << "Error validating program: '%s'\n"
-				  << eLog;
+		std::cout << "Error validating program: " << eLog << std::endl;
 		return;
 	}
 }
@@ -191,8 +182,7 @@ void Program::addShader(GLuint theProgram, std::string shaderCode, GLenum shader
 	if (!result)
 	{
 		glGetShaderInfoLog(theShader, sizeof(eLog), NULL, eLog);
-		std::cout << "Error compiling the %d shader: '%s'\n"
-				  << shaderType << eLog;
+		std::cout << "Error compiling the " << shaderType << " shader: " << eLog << std::endl;
 		return;
 	}
 
