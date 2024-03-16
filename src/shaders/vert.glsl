@@ -7,6 +7,7 @@ layout (location = 3) in vec2 tex;
 
 out vec3 posWorld;
 out vec3 normalWorld;
+out vec3 tangentWorld;
 out vec2 TexCoord;
 
 layout(std140) uniform Vertices
@@ -20,9 +21,10 @@ layout(std140) uniform Vertices
 void main()
 {
 	gl_Position = projection * view * model * vec4(pos, 1.0);
+
 	posWorld = (model * vec4(pos, 1.0)).xyz;
-	
 	// ignore scale
 	normalWorld = normalize(mat3(transpose(inverse(model))) * norm);
+	tangentWorld = normalize(model * vec4(tangent, 1.0)).xyz;
 	TexCoord = tex;
 }

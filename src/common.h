@@ -19,10 +19,6 @@ struct Light
 	GLfloat fallOffStart;
 	GLfloat fallOffEnd;
 	GLfloat spotPower;
-	GLint isDirectional;
-	GLint isPoint;
-	GLint isSpot;
-	bool useBlinnPhong;
 };
 
 struct Vertex

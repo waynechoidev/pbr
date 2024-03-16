@@ -16,10 +16,10 @@ Sphere::Sphere(GLfloat radius, GLuint numOfSlices, GLuint numOfStacks)
             Vertex v;
 
             glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), dTheta * float(i), glm::vec3(0.0f, 1.0f, 0.0f));
-            v.position = glm::vec3(rotationMatrix * glm::vec4(stackStartPoint, 1.0f));
 
+            v.position = glm::vec3(rotationMatrix * glm::vec4(stackStartPoint, 1.0f));
             v.normal = glm::normalize(v.position);
-            v.tangent = calculateTangent(v.normal);
+            v.tangent = calculateTangent(v.normal, v.position);
             v.texcoord = glm::vec2(1.0f - float(i) / numOfSlices, 1.0f - float(j) / numOfStacks);
 
             _vertices.push_back(v);
@@ -45,17 +45,18 @@ Sphere::Sphere(GLfloat radius, GLuint numOfSlices, GLuint numOfStacks)
     }
 }
 
-glm::vec3 Sphere::calculateTangent(const glm::vec3 &normal)
+glm::vec3 Sphere::calculateTangent(const glm::vec3 &normal, const glm::vec3 &position)
 {
-    glm::vec3 tangent = glm::vec3(1.0f, 0.0f, 0.0f);
+    glm::vec3 tangent;
 
-    if (glm::abs(normal.x) < 0.999f || glm::abs(normal.y) < 0.999f)
+    if (glm::abs(normal.y) < 0.999f)
     {
-        tangent = glm::cross(normal, glm::vec3(0.0f, 0.0f, 1.0f));
+        tangent = glm::normalize(glm::cross(normal, glm::vec3(0.0f, 1.0f, 0.0f)));
     }
     else
     {
-        tangent = glm::cross(normal, glm::vec3(1.0f, 0.0f, 0.0f));
+        tangent = glm::normalize(glm::cross(normal, glm::vec3(1.0f, 0.0f, 0.0f)));
     }
-    return glm::normalize(tangent);
+
+    return tangent;
 }

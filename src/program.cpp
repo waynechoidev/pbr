@@ -87,7 +87,7 @@ void Program::genFragmentBuffers()
 {
 	glGenBuffers(1, &_uboFragment);
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboFragment);
-	glBufferData(GL_UNIFORM_BUFFER, 16, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, 20, nullptr, GL_DYNAMIC_DRAW);
 	GLuint fragmentBlockIndex = glGetUniformBlockIndex(_programID, "Fragment");
 	glUniformBlockBinding(_programID, fragmentBlockIndex, 1);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 1, _uboFragment);
@@ -101,7 +101,7 @@ void Program::genFragmentBuffers()
 
 	glGenBuffers(1, &_uboLight);
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboLight);
-	glBufferData(GL_UNIFORM_BUFFER, 56, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, 40, nullptr, GL_DYNAMIC_DRAW);
 	GLuint lightBlockIndex = glGetUniformBlockIndex(_programID, "Light");
 	glUniformBlockBinding(_programID, lightBlockIndex, 3);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 3, _uboLight);
@@ -122,12 +122,14 @@ void Program::bindVertexBuffers(glm::mat4 model, glm::mat4 projection, glm::mat4
 	glBufferSubData(GL_UNIFORM_BUFFER, 128, 64, glm::value_ptr(projection));
 }
 
-void Program::bindFragmentBuffers(bool useTexture, glm::vec3 viewPosition, const Material &material, const Light &light)
+void Program::bindFragmentBuffers(bool useDiffuse, bool useNormal, glm::vec3 viewPosition, const Material &material, const Light &light)
 {
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboFragment);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, 12, glm::value_ptr(viewPosition));
-	int useTextureInt = useTexture ? 1 : 0;
-	glBufferSubData(GL_UNIFORM_BUFFER, 12, 4, &useTextureInt);
+	int useDiffuseInt = useDiffuse ? 1 : 0;
+	glBufferSubData(GL_UNIFORM_BUFFER, 12, 4, &useDiffuseInt);
+	int useNormalInt = useNormal ? 1 : 0;
+	glBufferSubData(GL_UNIFORM_BUFFER, 16, 4, &useNormalInt);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboMaterial);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, 4, &material.ambient);
@@ -142,11 +144,6 @@ void Program::bindFragmentBuffers(bool useTexture, glm::vec3 viewPosition, const
 	glBufferSubData(GL_UNIFORM_BUFFER, 28, 4, &light.fallOffStart);
 	glBufferSubData(GL_UNIFORM_BUFFER, 32, 4, &light.fallOffEnd);
 	glBufferSubData(GL_UNIFORM_BUFFER, 36, 4, &light.spotPower);
-	glBufferSubData(GL_UNIFORM_BUFFER, 40, 4, &light.isDirectional);
-	glBufferSubData(GL_UNIFORM_BUFFER, 44, 4, &light.isPoint);
-	glBufferSubData(GL_UNIFORM_BUFFER, 48, 4, &light.isSpot);
-	int useBlinnPhongInt = light.useBlinnPhong ? 1 : 0;
-	glBufferSubData(GL_UNIFORM_BUFFER, 52, 4, &useBlinnPhongInt);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }

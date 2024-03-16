@@ -14,7 +14,7 @@ public:
 	~Sphere() {}
 
 private:
-	glm::vec3 calculateTangent(const glm::vec3 &normal);
+	glm::vec3 calculateTangent(const glm::vec3 &normal, const glm::vec3 &position);
 
 	GLfloat pi = 3.14159265358979323846f;
 };

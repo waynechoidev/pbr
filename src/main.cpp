@@ -27,12 +27,14 @@ int main()
 	mainProgram.genVertexBuffers();
 	mainProgram.genFragmentBuffers();
 
-	Texture earthTexture = Texture(0);
-	earthTexture.initialise(currentDir / "textures/rock-diffuse.jpg");
+	Texture diffuseTex = Texture(0);
+	diffuseTex.initialise(currentDir / "textures/rock-diffuse.jpg");
+	Texture normalTex = Texture(1);
+	normalTex.initialise(currentDir / "textures/rock-normal.jpg");
 
 	// Model
 	glm::vec3 translation = glm::vec3(0.0f);
-	glm::vec3 scaling = glm::vec3(0.6f);
+	glm::vec3 scaling = glm::vec3(0.8f);
 	glm::vec3 rotation = glm::vec3(0.0f);
 
 	// Projection
@@ -56,20 +58,17 @@ int main()
 	light.fallOffStart = 0.0f;
 	light.fallOffEnd = 10.0f;
 	light.spotPower = 1.0f;
-	light.isDirectional = 1;
-	light.isPoint = 0;
-	light.isSpot = 0;
-	light.useBlinnPhong = true;
 
 	// Control
-	bool useTexture = true;
+	bool useDiffuse = true;
+	bool useNormal = true;
 	bool wireFrame = false;
 
 	while (!mainWindow.getShouldClose())
 	{
 		glfwPollEvents();
 
-		gui.update(useTexture, wireFrame, translation.x, scaling.x, rotation.x, material, light);
+		gui.update(useDiffuse, useNormal, wireFrame, translation.x, rotation.x, light);
 
 		mainWindow.clear(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -85,8 +84,9 @@ int main()
 
 		mainProgram.use();
 		mainProgram.bindVertexBuffers(model, projection, camera.calculateViewMatrix());
-		mainProgram.bindFragmentBuffers(useTexture, camera.getPosition(), material, light);
-		earthTexture.use();
+		mainProgram.bindFragmentBuffers(useDiffuse, useNormal, camera.getPosition(), material, light);
+		diffuseTex.use();
+		normalTex.use();
 		sphere.draw();
 		gui.render();
 
