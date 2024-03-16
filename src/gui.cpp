@@ -25,8 +25,8 @@ void Gui::update(bool &useDiffuse, bool &useNormal, bool &wireFrame, float &heig
 	ImGui::Checkbox("Wire Frame", &wireFrame);
 	ImGui::Checkbox("Use Diffuse Texture", &useDiffuse);
 	ImGui::Checkbox("Use Normal Texture", &useNormal);
-	ImGui::SliderFloat("Light Position", &light.position[0], -8.0f, 8.0f);
 	ImGui::SliderFloat("Height Map Scale", &heightScale, 0.0f, 1.0f);
+	ImGui::SliderFloat3("Light Position", &light.position[0], -8.0f, 8.0f);
 	ImGui::SliderFloat3("Model Translation", &translation, -2.0f, 2.0f);
 	ImGui::SliderFloat3("Model Rotation", &rotation, -3.14f, 3.14f);
 
