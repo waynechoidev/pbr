@@ -28,12 +28,12 @@ int main()
 	mainProgram.genFragmentBuffers();
 
 	Texture earthTexture = Texture(0);
-	earthTexture.initialise(currentDir / "textures/map.jpg");
+	earthTexture.initialise(currentDir / "textures/rock-diffuse.jpg");
 
 	// Model
 	glm::vec3 translation = glm::vec3(0.0f);
 	glm::vec3 scaling = glm::vec3(0.6f);
-	glm::vec3 rotation = {0.7f, 2.5f, 0.0f};
+	glm::vec3 rotation = glm::vec3(0.0f);
 
 	// Projection
 	float aspectRatio = (GLfloat)mainWindow.getBufferWidth() / mainWindow.getBufferHeight();
