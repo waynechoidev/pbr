@@ -11,7 +11,7 @@ void Gui::initialise(GLFWwindow *window)
 	ImGui_ImplOpenGL3_Init("#version 130");
 }
 
-void Gui::update(bool &useDiffuse, bool &useNormal, bool &wireFrame, float &translation, float &rotation, Light &light)
+void Gui::update(bool &useDiffuse, bool &useNormal, bool &wireFrame, float &heightScale, float &translation, float &rotation, Light &light)
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -25,11 +25,10 @@ void Gui::update(bool &useDiffuse, bool &useNormal, bool &wireFrame, float &tran
 	ImGui::Checkbox("Wire Frame", &wireFrame);
 	ImGui::Checkbox("Use Diffuse Texture", &useDiffuse);
 	ImGui::Checkbox("Use Normal Texture", &useNormal);
-	ImGui::SliderFloat3("Light Position", &light.position[0], -8.0f, 8.0f);
-
-	ImGui::Text("Model");
-	ImGui::SliderFloat3("Translation", &translation, -2.0f, 2.0f);
-	ImGui::SliderFloat3("Rotation", &rotation, -3.14f, 3.14f);
+	ImGui::SliderFloat("Light Position", &light.position[0], -8.0f, 8.0f);
+	ImGui::SliderFloat("Height Map Scale", &heightScale, 0.0f, 1.0f);
+	ImGui::SliderFloat3("Model Translation", &translation, -2.0f, 2.0f);
+	ImGui::SliderFloat3("Model Rotation", &rotation, -3.14f, 3.14f);
 
 	ImGui::End();
 }

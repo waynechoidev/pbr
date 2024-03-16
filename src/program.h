@@ -24,7 +24,7 @@ public:
 	void genVertexBuffers();
 	void genFragmentBuffers();
 	void use();
-	void bindVertexBuffers(glm::mat4 model, glm::mat4 projection, glm::mat4 view);
+	void bindVertexBuffers(glm::mat4 model, glm::mat4 projection, glm::mat4 view, float &heightScale);
 	void bindFragmentBuffers(bool useTexture, bool useNormal, glm::vec3 viewPosition, const Material &material, const Light &light);
 
 	~Program();

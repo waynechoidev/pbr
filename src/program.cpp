@@ -75,7 +75,7 @@ void Program::genVertexBuffers()
 {
 	glGenBuffers(1, &_uboMatrices);
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboMatrices);
-	glBufferData(GL_UNIFORM_BUFFER, 192, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, 196, nullptr, GL_DYNAMIC_DRAW);
 	GLuint matricesBlockIndex = glGetUniformBlockIndex(_programID, "Matrices");
 	glUniformBlockBinding(_programID, matricesBlockIndex, 0);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, _uboMatrices);
@@ -114,12 +114,13 @@ void Program::use()
 	glUseProgram(_programID);
 }
 
-void Program::bindVertexBuffers(glm::mat4 model, glm::mat4 projection, glm::mat4 view)
+void Program::bindVertexBuffers(glm::mat4 model, glm::mat4 projection, glm::mat4 view, float &heightScale)
 {
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboMatrices);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, glm::value_ptr(model));
 	glBufferSubData(GL_UNIFORM_BUFFER, 64, 64, glm::value_ptr(view));
 	glBufferSubData(GL_UNIFORM_BUFFER, 128, 64, glm::value_ptr(projection));
+	glBufferSubData(GL_UNIFORM_BUFFER, 192, 4, &heightScale);
 }
 
 void Program::bindFragmentBuffers(bool useDiffuse, bool useNormal, glm::vec3 viewPosition, const Material &material, const Light &light)

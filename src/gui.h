@@ -11,7 +11,7 @@ public:
 	Gui(){};
 
 	void initialise(GLFWwindow *window);
-	void update(bool &useDiffuse, bool &useNormal, bool &wireFrame, float &translation, float &rotation, Light &light);
+	void update(bool &useDiffuse, bool &useNormal, bool &wireFrame, float &heightScale, float &translation, float &rotation, Light &light);
 	void render();
 
 	~Gui(){};

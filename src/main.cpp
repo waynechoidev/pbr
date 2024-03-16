@@ -31,10 +31,12 @@ int main()
 	diffuseTex.initialise(currentDir / "textures/rock-diffuse.jpg");
 	Texture normalTex = Texture(1);
 	normalTex.initialise(currentDir / "textures/rock-normal.jpg");
+	Texture heightTex = Texture(2);
+	heightTex.initialise(currentDir / "textures/rock-height.jpg");
 
 	// Model
 	glm::vec3 translation = glm::vec3(0.0f);
-	glm::vec3 scaling = glm::vec3(0.8f);
+	glm::vec3 scaling = glm::vec3(0.9f);
 	glm::vec3 rotation = glm::vec3(0.0f);
 
 	// Projection
@@ -63,12 +65,13 @@ int main()
 	bool useDiffuse = true;
 	bool useNormal = true;
 	bool wireFrame = false;
+	float heightScale = 0.0f;
 
 	while (!mainWindow.getShouldClose())
 	{
 		glfwPollEvents();
 
-		gui.update(useDiffuse, useNormal, wireFrame, translation.x, rotation.x, light);
+		gui.update(useDiffuse, useNormal, wireFrame, heightScale, translation.x, rotation.x, light);
 
 		mainWindow.clear(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -83,10 +86,11 @@ int main()
 		model = glm::rotate(model, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 
 		mainProgram.use();
-		mainProgram.bindVertexBuffers(model, projection, camera.calculateViewMatrix());
+		mainProgram.bindVertexBuffers(model, projection, camera.calculateViewMatrix(), heightScale);
 		mainProgram.bindFragmentBuffers(useDiffuse, useNormal, camera.getPosition(), material, light);
 		diffuseTex.use();
 		normalTex.use();
+		heightTex.use();
 		sphere.draw();
 		gui.render();
 

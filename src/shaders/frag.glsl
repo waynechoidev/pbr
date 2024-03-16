@@ -56,7 +56,7 @@ vec3 blinnPhong(vec3 lightStrength, vec3 lightVec, vec3 normal, vec3 toEye)
     return material.ambient + (vec3(material.diffuse) + specular) * lightStrength;
 }
 
-vec3 computeSpotLight(vec3 pos, vec3 normal, vec3 toEye)
+vec3 computePointLight(vec3 pos, vec3 normal, vec3 toEye)
 {
     vec3 lightVec = light.position - pos;
 
@@ -76,9 +76,6 @@ vec3 computeSpotLight(vec3 pos, vec3 normal, vec3 toEye)
         float att = calcAttenuation(d, light.fallOffStart, light.fallOffEnd);
         lightStrength *= att;
         
-        float spotFactor = pow(max(-dot(lightVec, light.direction), 0.0f), light.spotPower);
-        lightStrength *= spotFactor;
-        
         return blinnPhong(lightStrength, lightVec, normal, toEye);
     }
 }
@@ -96,7 +93,7 @@ void main()
 
 	vec3 res = vec3(0.0);
     
-    res += computeSpotLight(posWorld, useNormal ? normal : normalWorld, toEye);
+    res += computePointLight(posWorld, useNormal ? normal : normalWorld, toEye);
 
 	colour = useDiffuse ? vec4(res, 1.0) * texture(diffuseTex, TexCoord) : vec4(res, 1.0);
 }
