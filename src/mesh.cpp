@@ -11,7 +11,7 @@ Mesh::Mesh()
 void Mesh::initialise()
 {
 	_indexCount = (GLsizei)_indices.size();
-	int vertexDataSize = sizeof(_vertices[0].position[0]) * 8;
+	int vertexDataSize = sizeof(_vertices[0].position[0]) * 11;
 
 	glGenVertexArrays(1, &_VAO);
 	glBindVertexArray(_VAO);
@@ -28,8 +28,10 @@ void Mesh::initialise()
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertexDataSize, (void *)(sizeof(_vertices[0].position[0]) * 3));
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, vertexDataSize, (void *)(sizeof(_vertices[0].position[0]) * 6));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, vertexDataSize, (void *)(sizeof(_vertices[0].position[0]) * 6));
 	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, vertexDataSize, (void *)(sizeof(_vertices[0].position[0]) * 9));
+	glEnableVertexAttribArray(3);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
