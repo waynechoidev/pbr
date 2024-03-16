@@ -27,7 +27,7 @@ int main()
 	mainProgram.genVertexBuffers();
 	mainProgram.genFragmentBuffers();
 
-	Texture earthTexture = Texture();
+	Texture earthTexture = Texture(0);
 	earthTexture.initialise(currentDir / "textures/map.jpg");
 
 	// Model

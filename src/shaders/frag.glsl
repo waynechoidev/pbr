@@ -37,7 +37,7 @@ layout(std140) uniform Light
     // 56
 } light;
 
-uniform sampler2D theTexture;
+layout(binding = 0) uniform sampler2D theTexture;
 
 float calcAttenuation(float d, float falloffStart, float falloffEnd)
 {

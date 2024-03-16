@@ -3,7 +3,13 @@
 
 Texture::Texture()
 {
+	Texture(0);
+}
+
+Texture::Texture(int index)
+{
 	_textureID = 0;
+	_textureIndex = GL_TEXTURE0 + index;
 	_width = 0;
 	_height = 0;
 	_bitDepth = 0;
@@ -36,7 +42,7 @@ void Texture::initialise(std::string fileLoc)
 
 void Texture::use()
 {
-	glActiveTexture(GL_TEXTURE0);
+	glActiveTexture(_textureIndex);
 	glBindTexture(GL_TEXTURE_2D, _textureID);
 }
 
