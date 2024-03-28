@@ -3,13 +3,14 @@
 
 Texture::Texture()
 {
-	Texture(0);
+	Texture(0, GL_RGB);
 }
 
-Texture::Texture(int index)
+Texture::Texture(int index, GLint channel)
 {
 	_textureID = 0;
 	_textureIndex = GL_TEXTURE0 + index;
+	_textureChannel = channel;
 	_width = 0;
 	_height = 0;
 	_bitDepth = 0;
@@ -32,7 +33,7 @@ void Texture::initialise(std::string fileLoc)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, texData);
+	glTexImage2D(GL_TEXTURE_2D, 0, _textureChannel, _width, _height, 0, _textureChannel, GL_UNSIGNED_BYTE, texData);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	glBindTexture(GL_TEXTURE_2D, 0);

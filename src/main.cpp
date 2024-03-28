@@ -17,7 +17,7 @@ int main()
 	Gui gui = Gui();
 	gui.initialise(mainWindow.getWindow());
 
-	Sphere sphere = Sphere(1.0f);
+	Sphere sphere = Sphere(1.0f, 1000, 1000);
 	sphere.initialise();
 
 	std::filesystem::path currentDir = std::filesystem::path(__FILE__).parent_path();
@@ -27,12 +27,12 @@ int main()
 	mainProgram.genVertexBuffers();
 	mainProgram.genFragmentBuffers();
 
-	Texture diffuseTex = Texture(0);
-	diffuseTex.initialise(currentDir / "textures/rock-diffuse.jpg");
-	Texture normalTex = Texture(1);
-	normalTex.initialise(currentDir / "textures/rock-normal.jpg");
-	Texture heightTex = Texture(2);
-	heightTex.initialise(currentDir / "textures/rock-height.jpg");
+	Texture diffuseTex = Texture(0, GL_RGB);
+	diffuseTex.initialise(currentDir / "textures/stained_patterned_metal_26_98_diffuse.jpg");
+	Texture normalTex = Texture(1, GL_RGB);
+	normalTex.initialise(currentDir / "textures/stained_patterned_metal_26_98_normal.jpg");
+	Texture heightTex = Texture(2, GL_RED);
+	heightTex.initialise(currentDir / "textures/stained_patterned_metal_26_98_height.jpg");
 
 	// Model
 	glm::vec3 translation = glm::vec3(0.0f);
