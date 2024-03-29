@@ -19,7 +19,7 @@ layout(std140) uniform Vertices
 	// 196
 };
 
-layout(binding = 2) uniform sampler2D heightTex;
+layout(binding = 0) uniform sampler2D heightTex;
 
 void main()
 {

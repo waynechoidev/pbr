@@ -32,15 +32,14 @@ layout(std140) uniform Light
     float fallOffStart; // 4    28
     float fallOffEnd; // 4      32
     float spotPower; // 4       36
-    // int isDirectional; // 4     40
-    // int isPoint; // 4           44
-    // int isSpot; // 4            48
-    // bool useBlinnPhong; // 4      52
     // 40
 } light;
 
-layout(binding = 0) uniform sampler2D diffuseTex;
-layout(binding = 1) uniform sampler2D normalTex;
+layout(binding = 1) uniform sampler2D diffuseTex;
+layout(binding = 2) uniform sampler2D normalTex;
+layout(binding = 3) uniform sampler2D metallicTex;
+layout(binding = 4) uniform sampler2D roughnessTex;
+layout(binding = 5) uniform sampler2D aoTex;
 
 float calcAttenuation(float d, float falloffStart, float falloffEnd)
 {

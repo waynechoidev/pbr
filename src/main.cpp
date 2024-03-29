@@ -27,16 +27,22 @@ int main()
 	mainProgram.genVertexBuffers();
 	mainProgram.genFragmentBuffers();
 
-	Texture diffuseTex = Texture(0, GL_RGB);
-	diffuseTex.initialise(currentDir / "textures/stained_patterned_metal_26_98_diffuse.jpg");
-	Texture normalTex = Texture(1, GL_RGB);
-	normalTex.initialise(currentDir / "textures/stained_patterned_metal_26_98_normal.jpg");
-	Texture heightTex = Texture(2, GL_RED);
+	Texture heightTex = Texture(0, GL_RED);
 	heightTex.initialise(currentDir / "textures/stained_patterned_metal_26_98_height.jpg");
+	Texture diffuseTex = Texture(1, GL_RGB);
+	diffuseTex.initialise(currentDir / "textures/stained_patterned_metal_26_98_diffuse.jpg");
+	Texture normalTex = Texture(2, GL_RGB);
+	normalTex.initialise(currentDir / "textures/stained_patterned_metal_26_98_normal.jpg");
+	Texture metallicTex = Texture(3, GL_RED);
+	metallicTex.initialise(currentDir / "textures/stained_patterned_metal_26_98_metalness.jpg");
+	Texture roughnessTex = Texture(4, GL_RED);
+	roughnessTex.initialise(currentDir / "textures/stained_patterned_metal_26_98_roughness.jpg");
+	Texture aoTEX = Texture(5, GL_RED);
+	aoTEX.initialise(currentDir / "textures/stained_patterned_metal_26_98_ao.jpg");
 
 	// Model
 	glm::vec3 translation = glm::vec3(0.0f);
-	glm::vec3 scaling = glm::vec3(0.9f);
+	glm::vec3 scaling = glm::vec3(0.5f);
 	glm::vec3 rotation = glm::vec3(0.0f);
 
 	// Projection
@@ -65,7 +71,7 @@ int main()
 	bool useDiffuse = true;
 	bool useNormal = true;
 	bool wireFrame = false;
-	float heightScale = 0.0f;
+	float heightScale = 0.05f;
 
 	while (!mainWindow.getShouldClose())
 	{
