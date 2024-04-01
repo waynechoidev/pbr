@@ -23,7 +23,7 @@ int main()
 	std::filesystem::path currentDir = std::filesystem::path(__FILE__).parent_path();
 
 	Program mainProgram = Program();
-	mainProgram.createFromFiles(currentDir / "shaders/vert.glsl", currentDir / "shaders/frag.glsl");
+	mainProgram.createFromFiles(currentDir / "shaders/main.vert", currentDir / "shaders/main.frag");
 	mainProgram.genVertexBuffers();
 	mainProgram.genFragmentBuffers();
 
