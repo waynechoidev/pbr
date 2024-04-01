@@ -82,6 +82,8 @@ vec3 computePointLight(vec3 pos, vec3 normal, vec3 toEye)
 void main()
 {
     vec3 N = normalize(normalWorld);
+    // Adjust the tangent vector to ensure it is perpendicular to the surface
+    // by removing the component parallel to the normal vector.
     vec3 T = normalize(tangentWorld - dot(tangentWorld, N) * N);
     vec3 B = cross(N, T);
     mat3 TBN = mat3(T, B, N);
