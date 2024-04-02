@@ -1,6 +1,5 @@
 #pragma once
 
-#include "common.h"
 #include <stdio.h>
 #include <string>
 #include <fstream>
@@ -21,11 +20,9 @@ public:
 
 	std::string readFile(std::string fileLocation);
 
-	void genVertexBuffers();
-	void genFragmentBuffers();
 	void use();
 	void bindVertexBuffers(glm::mat4 model, glm::mat4 projection, glm::mat4 view, float &heightScale);
-	void bindFragmentBuffers(bool useTexture, bool useNormal, glm::vec3 viewPosition, const Material &material, const Light &light);
+	void bindFragmentBuffers(glm::vec3 campos, glm::vec3 lightPos, bool useDirectLight, bool useEnvLight);
 
 	~Program();
 
@@ -35,5 +32,7 @@ private:
 
 	void compileShader(std::string vertexCode, std::string fragmentCode);
 	void addShader(GLuint theProgram, std::string shaderCode, GLenum shaderType);
+	void genVertexBuffers();
+	void genFragmentBuffers();
 	void clear();
 };

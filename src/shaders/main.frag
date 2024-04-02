@@ -1,100 +1,142 @@
 #version 420 core
 
+out vec4 FragColor;
 in vec2 TexCoord;
 in vec3 posWorld;
 in vec3 normalWorld;
 in vec3 tangentWorld;
 
-out vec4 colour;
-
 layout(std140) uniform Fragment
 {
-    vec3 viewPosition; // 12    0
-    bool useDiffuse; // 4       12
-    bool useNormal; // 4        16
-    // 20
+                          //size     index
+    vec3 camPos;          //12       0
+    bool useDirectLight;   //4        12
+    //
+    vec3 lightPos;        //12       16
+    bool useEnvLight;     //4        28
+                          //total    32
 };
 
-layout(std140) uniform Material
-{
-    float ambient; // 4     0
-    float shininess; // 4   4
-    float diffuse; // 4     8
-    float specular; // 4    12
-    // 16
-} material;
+layout(binding = 1) uniform sampler2D albedoMap;
+layout(binding = 2) uniform sampler2D normalMap;
+layout(binding = 3) uniform sampler2D metallicMap;
+layout(binding = 4) uniform sampler2D roughnessMap;
+layout(binding = 5) uniform sampler2D aoMap;
 
-layout(std140) uniform Light
-{
-    vec3 position; // 12        0
-    float strength; // 4        12
-    vec3 direction; // 12       16
-    float fallOffStart; // 4    28
-    float fallOffEnd; // 4      32
-    float spotPower; // 4       36
-    // 40
-} light;
+const float PI = 3.14159265359;
 
-layout(binding = 1) uniform sampler2D diffuseTex;
-layout(binding = 2) uniform sampler2D normalTex;
-layout(binding = 3) uniform sampler2D metallicTex;
-layout(binding = 4) uniform sampler2D roughnessTex;
-layout(binding = 5) uniform sampler2D aoTex;
-
-float calcAttenuation(float d, float falloffStart, float falloffEnd)
+vec3 getNormalFromMap()
 {
-    // Linear falloff
-    return clamp((falloffEnd - d) / (falloffEnd - falloffStart), 0.0, 1.0);
+    vec3 tangentNormal = texture(normalMap, TexCoord).xyz * 2.0 - 1.0;
+
+    vec3 Q1  = dFdx(posWorld);
+    vec3 Q2  = dFdy(posWorld);
+    vec2 st1 = dFdx(TexCoord);
+    vec2 st2 = dFdy(TexCoord);
+
+    vec3 N   = normalize(normalWorld);
+    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
+    vec3 B  = -normalize(cross(N, T));
+    mat3 TBN = mat3(T, B, N);
+
+    return normalize(TBN * tangentNormal);
 }
 
-vec3 blinnPhong(vec3 lightStrength, vec3 lightVec, vec3 normal, vec3 toEye)
+float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
-    vec3 halfway = normalize(toEye + lightVec);
-    float hdotn = dot(halfway, normal);
-    vec3 specular = vec3(material.specular) * pow(max(hdotn, 0.0f), material.shininess);
-    return material.ambient + (vec3(material.diffuse) + specular) * lightStrength;
+    float a = roughness*roughness;
+    float a2 = a*a;
+    float NdotH = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
+
+    float nom   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+
+    return nom / denom;
 }
 
-vec3 computePointLight(vec3 pos, vec3 normal, vec3 toEye)
+float GeometrySchlickGGX(float NdotV, float roughness)
 {
-    vec3 lightVec = light.position - pos;
+    float r = (roughness + 1.0);
+    float k = (r*r) / 8.0;
 
-    float d = length(lightVec);
+    float nom   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
 
-    if (d > light.fallOffEnd)
-    {
-        return vec3(0.0f);
-    }
-    else
-    {
-        lightVec /= d;
-        
-        float ndotl = max(dot(lightVec, normal), 0.0f);
-        vec3 lightStrength = vec3(light.strength) * ndotl;
-        
-        float att = calcAttenuation(d, light.fallOffStart, light.fallOffEnd);
-        lightStrength *= att;
-        
-        return blinnPhong(lightStrength, lightVec, normal, toEye);
-    }
+    return nom / denom;
+}
+
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggx1 * ggx2;
+}
+
+vec3 fresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
 void main()
 {
+    vec3 albedo     = pow(texture(albedoMap, TexCoord).rgb, vec3(2.2));
+    float metallic  = texture(metallicMap, TexCoord).r;
+    float roughness = texture(roughnessMap, TexCoord).r;
+    float ao        = texture(aoMap, TexCoord).r;
+
     vec3 N = normalize(normalWorld);
     // Adjust the tangent vector to ensure it is perpendicular to the surface
     // by removing the component parallel to the normal vector.
     vec3 T = normalize(tangentWorld - dot(tangentWorld, N) * N);
     vec3 B = cross(N, T);
     mat3 TBN = mat3(T, B, N);
-    vec3 normalMap = texture(normalTex, TexCoord).xyz;
-    vec3 normal = normalize(TBN * normalMap);
+    N = normalize(TBN * texture(normalMap, TexCoord).xyz);
+    // vec3 N = getNormalFromMap();
 
-	vec3 toEye = normalize(viewPosition - posWorld);
+	vec3 V = normalize(camPos - posWorld);
 
-	vec3 res = vec3(0.0);
+    vec3 lightRadiances = vec3(10.0);
+
+    vec3 F0 = vec3(0.04);
+    F0 = mix(F0, albedo, metallic);
+
+    vec3 L = normalize(lightPos - posWorld);
+    vec3 H = normalize(V + L);
+    float distance = length(lightPos - posWorld);
+    float attenuation = 1.0 / (distance * distance);
+    vec3 radiance = lightRadiances * attenuation;
+
+    float NDF = DistributionGGX(N, H, roughness);   
+    float G = GeometrySmith(N, V, L, roughness);      
+    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+        
+    vec3 numerator = NDF * G * F; 
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
+    vec3 specular = numerator / denominator;
     
-    res += computePointLight(posWorld, useNormal ? normal : normalWorld, toEye);
+    vec3 kS = F;
 
-	colour = useDiffuse ? vec4(res, 1.0) * texture(diffuseTex, TexCoord) : vec4(res, 1.0);
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - metallic;	  
+
+    // scale light by NdotL
+    float NdotL = max(dot(N, L), 0.0);
+
+    vec3 directLight = (kD * albedo / PI + specular) * radiance * NdotL;        
+
+    vec3 ambient = vec3(0.3) * albedo * ao;
+
+	vec3 color = ambient + directLight;
+    
+    // HDR tonemapping
+    color = color / (color + vec3(1.0));
+    // gamma correct
+    color = pow(color, vec3(1.0/2.2)); 
+
+    FragColor = vec4(color, 1.0);
 }

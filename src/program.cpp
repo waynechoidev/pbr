@@ -12,6 +12,9 @@ void Program::createFromFiles(std::string vertexLocation, std::string fragmentLo
 	std::string fragmentCode = readFile(fragmentLocation);
 
 	compileShader(vertexCode, fragmentCode);
+
+	genVertexBuffers();
+	genFragmentBuffers();
 }
 
 std::string Program::readFile(std::string fileLocation)
@@ -87,24 +90,10 @@ void Program::genFragmentBuffers()
 {
 	glGenBuffers(1, &_uboFragment);
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboFragment);
-	glBufferData(GL_UNIFORM_BUFFER, 20, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, 32, nullptr, GL_DYNAMIC_DRAW);
 	GLuint fragmentBlockIndex = glGetUniformBlockIndex(_programID, "Fragment");
 	glUniformBlockBinding(_programID, fragmentBlockIndex, 1);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 1, _uboFragment);
-
-	glGenBuffers(1, &_uboMaterial);
-	glBindBuffer(GL_UNIFORM_BUFFER, _uboMaterial);
-	glBufferData(GL_UNIFORM_BUFFER, 16, nullptr, GL_DYNAMIC_DRAW);
-	GLuint materialBlockIndex = glGetUniformBlockIndex(_programID, "Material");
-	glUniformBlockBinding(_programID, materialBlockIndex, 2);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 2, _uboMaterial);
-
-	glGenBuffers(1, &_uboLight);
-	glBindBuffer(GL_UNIFORM_BUFFER, _uboLight);
-	glBufferData(GL_UNIFORM_BUFFER, 40, nullptr, GL_DYNAMIC_DRAW);
-	GLuint lightBlockIndex = glGetUniformBlockIndex(_programID, "Light");
-	glUniformBlockBinding(_programID, lightBlockIndex, 3);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 3, _uboLight);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
@@ -117,34 +106,27 @@ void Program::use()
 void Program::bindVertexBuffers(glm::mat4 model, glm::mat4 projection, glm::mat4 view, float &heightScale)
 {
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboMatrices);
+
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, glm::value_ptr(model));
 	glBufferSubData(GL_UNIFORM_BUFFER, 64, 64, glm::value_ptr(view));
 	glBufferSubData(GL_UNIFORM_BUFFER, 128, 64, glm::value_ptr(projection));
+
 	glBufferSubData(GL_UNIFORM_BUFFER, 192, 4, &heightScale);
+
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void Program::bindFragmentBuffers(bool useDiffuse, bool useNormal, glm::vec3 viewPosition, const Material &material, const Light &light)
+void Program::bindFragmentBuffers(glm::vec3 campos, glm::vec3 lightPos, bool useDirectLight, bool useEnvLight)
 {
 	glBindBuffer(GL_UNIFORM_BUFFER, _uboFragment);
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, 12, glm::value_ptr(viewPosition));
-	int useDiffuseInt = useDiffuse ? 1 : 0;
-	glBufferSubData(GL_UNIFORM_BUFFER, 12, 4, &useDiffuseInt);
-	int useNormalInt = useNormal ? 1 : 0;
-	glBufferSubData(GL_UNIFORM_BUFFER, 16, 4, &useNormalInt);
 
-	glBindBuffer(GL_UNIFORM_BUFFER, _uboMaterial);
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, 4, &material.ambient);
-	glBufferSubData(GL_UNIFORM_BUFFER, 4, 4, &material.shininess);
-	glBufferSubData(GL_UNIFORM_BUFFER, 8, 4, &material.diffuse);
-	glBufferSubData(GL_UNIFORM_BUFFER, 12, 4, &material.specular);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, 12, glm::value_ptr(campos));
+	int useDirectLightInt = useDirectLight ? 1 : 0;
+	glBufferSubData(GL_UNIFORM_BUFFER, 12, 4, &useDirectLightInt);
 
-	glBindBuffer(GL_UNIFORM_BUFFER, _uboLight);
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, 12, glm::value_ptr(light.position));
-	glBufferSubData(GL_UNIFORM_BUFFER, 12, 4, &light.strength);
-	glBufferSubData(GL_UNIFORM_BUFFER, 16, 12, glm::value_ptr(light.direction));
-	glBufferSubData(GL_UNIFORM_BUFFER, 28, 4, &light.fallOffStart);
-	glBufferSubData(GL_UNIFORM_BUFFER, 32, 4, &light.fallOffEnd);
-	glBufferSubData(GL_UNIFORM_BUFFER, 36, 4, &light.spotPower);
+	glBufferSubData(GL_UNIFORM_BUFFER, 16, 12, glm::value_ptr(lightPos));
+	int useEnvLightInt = useEnvLight ? 1 : 0;
+	glBufferSubData(GL_UNIFORM_BUFFER, 28, 4, &useEnvLightInt);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
