@@ -14,3 +14,13 @@ This project uses Git submodules to manage external dependencies. After cloning 
 git submodule init
 git submodule update
 ```
+
+## Credits
+
+This project was developed with reference to the content available at [Learn OpenGL](https://learnopengl.com/).
+
+The ideas presented on that website served as inspiration for this implementation.
+
+## License
+
+This project is licensed under the  [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
