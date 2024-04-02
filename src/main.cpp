@@ -41,7 +41,7 @@ int main()
 	// Model
 	glm::vec3 translation = glm::vec3(0.0f);
 	glm::vec3 scaling = glm::vec3(1.0f);
-	glm::vec3 rotation = glm::vec3(0.0f);
+	glm::vec3 rotation = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	// Projection
 	float aspectRatio = (GLfloat)mainWindow.getBufferWidth() / mainWindow.getBufferHeight();

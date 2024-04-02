@@ -25,23 +25,6 @@ layout(binding = 5) uniform sampler2D aoMap;
 
 const float PI = 3.14159265359;
 
-vec3 getNormalFromMap()
-{
-    vec3 tangentNormal = texture(normalMap, TexCoord).xyz * 2.0 - 1.0;
-
-    vec3 Q1  = dFdx(posWorld);
-    vec3 Q2  = dFdy(posWorld);
-    vec2 st1 = dFdx(TexCoord);
-    vec2 st2 = dFdy(TexCoord);
-
-    vec3 N   = normalize(normalWorld);
-    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
-    vec3 B  = -normalize(cross(N, T));
-    mat3 TBN = mat3(T, B, N);
-
-    return normalize(TBN * tangentNormal);
-}
-
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
     float a = roughness*roughness;
@@ -95,9 +78,8 @@ void main()
     vec3 T = normalize(tangentWorld - dot(tangentWorld, N) * N);
     vec3 B = cross(N, T);
     mat3 TBN = mat3(T, B, N);
-    N = normalize(TBN * texture(normalMap, TexCoord).xyz);
-    // vec3 N = getNormalFromMap();
-
+    N = normalize(TBN * (texture(normalMap, TexCoord).xyz * 2.0 - 1.0));
+    
 	vec3 V = normalize(camPos - posWorld);
 
     vec3 lightRadiances = vec3(10.0);

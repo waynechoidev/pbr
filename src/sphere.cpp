@@ -19,7 +19,7 @@ Sphere::Sphere(GLfloat radius, GLuint numOfSlices, GLuint numOfStacks)
 
             v.position = glm::vec3(rotationMatrix * glm::vec4(stackStartPoint, 1.0f));
             v.normal = glm::normalize(v.position);
-            v.texcoord = glm::vec2(1.0f - float(i) / numOfSlices, 1.0f - float(j) / numOfStacks);
+            v.texcoord = glm::vec2(float(i) / numOfSlices, 1.0f - float(j) / numOfStacks);
 
             _vertices.push_back(v);
         }
