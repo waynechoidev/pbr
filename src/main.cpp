@@ -1,9 +1,15 @@
 #define STB_IMAGE_IMPLEMENTATION
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <filesystem>
 #include "stb_image.h"
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
+#include <glm/gtx/intersect.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include "window.h"
+#include "common.h"
 #include "gui.h"
 #include "program.h"
 #include "sphere.h"
@@ -12,12 +18,15 @@
 #include "cubemap.h"
 #include "cube.h"
 #include "hdr-texture.h"
-unsigned int cubeVAO = 0;
-unsigned int cubeVBO = 0;
+#include "ray-picking.h"
+
+const GLfloat SPHERE_SCALE = 1.0;
+const GLint WIDTH = 1920;
+const GLint HEIGHT = 1080;
 
 int main()
 {
-	Window mainWindow = Window(1920, 1080);
+	Window mainWindow = Window(WIDTH, HEIGHT);
 	mainWindow.initialise();
 
 	Gui gui = Gui();
@@ -116,8 +125,8 @@ int main()
 
 	// Model
 	glm::vec3 translation = glm::vec3(0.0f);
-	glm::vec3 scaling = glm::vec3(1.0f);
-	glm::vec3 rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 scaling = glm::vec3(SPHERE_SCALE);
+	glm::quat modelQuaternions = glm::angleAxis(0.0f, glm::vec3(1.0f, 0.0f, 0.0f));
 
 	// Projection
 	float aspectRatio = (GLfloat)mainWindow.getBufferWidth() / mainWindow.getBufferHeight();
@@ -131,11 +140,46 @@ int main()
 	bool useEnvLight = true;
 	float heightScale = 0.03;
 	glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 2.0f);
+	bool dragStartFlag = false;
+	glm::vec3 prevMouseRayVector = glm::vec3(0.0f, 1.0f, 0.0f);
 
 	glViewport(0, 0, mainWindow.getBufferWidth(), mainWindow.getBufferHeight());
 
 	while (!mainWindow.getShouldClose())
 	{
+		glfwPollEvents();
+
+		// Pick
+		bool intersection = false;
+		if (mainWindow.getMouseLeft())
+		{
+			glm::vec3 ray_wor = get_ray_from_mouse(mainWindow.getCursor(), projection, camera.calculateViewMatrix(), WIDTH, HEIGHT);
+			glm::vec3 pickPoint = ray_sphere(camera.getPosition(), ray_wor, translation, SPHERE_SCALE, intersection);
+			if (intersection)
+			{
+				if (dragStartFlag)
+				{
+					dragStartFlag = false;
+					prevMouseRayVector = glm::normalize(pickPoint - translation);
+				}
+				else
+				{
+					glm::vec3 currentMouseRayVector = glm::normalize(pickPoint - translation);
+					GLfloat theta = glm::acos(glm::dot(prevMouseRayVector, currentMouseRayVector));
+					if (theta > 0.001f)
+					{
+						glm::vec3 axis = glm::normalize(glm::cross(prevMouseRayVector, currentMouseRayVector));
+						modelQuaternions = glm::angleAxis(theta, axis) * modelQuaternions;
+						prevMouseRayVector = glm::normalize(pickPoint - translation);
+					}
+				}
+			}
+		}
+		else
+		{
+			dragStartFlag = true;
+		}
+
 		gui.update(heightScale, useDirectLight, useEnvLight, lightPos[0], camera.getRotation());
 
 		mainWindow.clear(0.0f, 0.0f, 0.0f, 1.0f);
@@ -144,9 +188,7 @@ int main()
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(translation.x, translation.y, translation.z));
 		model = glm::scale(model, scaling);
-		model = glm::rotate(model, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::rotate(model, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-		model = glm::rotate(model, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		model = model * glm::toMat4(modelQuaternions);
 
 		mainProgram.use();
 		mainProgram.bindVertexBuffers(model, projection, camera.calculateViewMatrix(), heightScale);
@@ -168,7 +210,6 @@ int main()
 		glUseProgram(0);
 
 		mainWindow.swapBuffers();
-		glfwPollEvents();
 	}
 
 	return 0;

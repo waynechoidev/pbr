@@ -4,6 +4,7 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 class Window
 {
@@ -23,6 +24,11 @@ public:
 	bool *getsKeys() { return _keys; }
 	GLfloat getXChange();
 	GLfloat getYChange();
+	glm::vec2 getCursor() { return glm::vec2(_lastX, _lastY); }
+	bool getMouseLeft()
+	{
+		return glfwGetMouseButton(_mainWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+	}
 
 	void clear(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
 
