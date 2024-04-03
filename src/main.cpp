@@ -24,19 +24,20 @@ int main()
 
 	Program mainProgram = Program();
 	mainProgram.createFromFiles(currentDir / "shaders/main.vert", currentDir / "shaders/main.frag");
+	auto mainProgramId = mainProgram.getId();
 
-	Texture heightMap = Texture(0, GL_RGB);
-	heightMap.initialise(currentDir / "textures/antique-grate1-height.png");
-	Texture albedoMap = Texture(1, GL_RGB);
-	albedoMap.initialise(currentDir / "textures/antique-grate1-albedo.png");
-	Texture normalMap = Texture(2, GL_RGB);
-	normalMap.initialise(currentDir / "textures/antique-grate1-normal-dx.png");
-	Texture metallicMap = Texture(3, GL_RGB);
-	metallicMap.initialise(currentDir / "textures/antique-grate1-metallic.png");
-	Texture roughnessMap = Texture(4, GL_RGB);
-	roughnessMap.initialise(currentDir / "textures/antique-grate1-roughness.png");
-	Texture aoMap = Texture(5, GL_RGB);
-	aoMap.initialise(currentDir / "textures/antique-grate1-ao.png");
+	Texture heightMap = Texture(GL_RGB);
+	heightMap.initialise("heightMap", currentDir / "textures/antique-grate1-height.png");
+	Texture albedoMap = Texture(GL_RGB);
+	albedoMap.initialise("albedoMap", currentDir / "textures/antique-grate1-albedo.png");
+	Texture normalMap = Texture(GL_RGB);
+	normalMap.initialise("normalMap", currentDir / "textures/antique-grate1-normal-dx.png");
+	Texture metallicMap = Texture(GL_RGB);
+	metallicMap.initialise("metallicMap", currentDir / "textures/antique-grate1-metallic.png");
+	Texture roughnessMap = Texture(GL_RGB);
+	roughnessMap.initialise("roughnessMap", currentDir / "textures/antique-grate1-roughness.png");
+	Texture aoMap = Texture(GL_RGB);
+	aoMap.initialise("aoMap", currentDir / "textures/antique-grate1-ao.png");
 
 	// Model
 	glm::vec3 translation = glm::vec3(0.0f);
@@ -75,9 +76,14 @@ int main()
 		mainProgram.use();
 		mainProgram.bindVertexBuffers(model, projection, camera.calculateViewMatrix(), heightScale);
 		mainProgram.bindFragmentBuffers(camera.getPosition(), lightPos, useDirectLight, useEnvLight);
-		albedoMap.use();
-		normalMap.use();
-		heightMap.use();
+
+		heightMap.use(mainProgramId, 0);
+		albedoMap.use(mainProgramId, 1);
+		normalMap.use(mainProgramId, 2);
+		metallicMap.use(mainProgramId, 3);
+		roughnessMap.use(mainProgramId, 4);
+		aoMap.use(mainProgramId, 5);
+
 		sphere.draw();
 		gui.render();
 

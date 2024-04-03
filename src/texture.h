@@ -8,15 +8,16 @@ class Texture
 {
 public:
 	Texture();
-	Texture(int index, GLint channel);
+	Texture(GLint channel);
 
-	void initialise(std::string fileLoc);
-	void use();
+	void initialise(std::string name, std::string fileLoc);
+	void use(GLuint programId, int index);
 	void clear();
 
 	~Texture();
 
 private:
-	GLuint _textureID, _textureIndex, _textureChannel;
+	GLuint _textureID, _textureChannel;
 	int _width, _height, _bitDepth;
+	std::string _name;
 };

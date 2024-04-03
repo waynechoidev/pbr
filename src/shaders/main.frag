@@ -17,11 +17,11 @@ layout(std140) uniform Fragment
                           //total    32
 };
 
-layout(binding = 1) uniform sampler2D albedoMap;
-layout(binding = 2) uniform sampler2D normalMap;
-layout(binding = 3) uniform sampler2D metallicMap;
-layout(binding = 4) uniform sampler2D roughnessMap;
-layout(binding = 5) uniform sampler2D aoMap;
+uniform sampler2D albedoMap;
+uniform sampler2D normalMap;
+uniform sampler2D metallicMap;
+uniform sampler2D roughnessMap;
+uniform sampler2D aoMap;
 
 const float PI = 3.14159265359;
 
@@ -67,10 +67,11 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 void main()
 {
-    vec3 albedo     = pow(texture(albedoMap, TexCoord).rgb, vec3(2.2));
+    // Apply gamma correction to the sampled albedo texture to convert it from sRGB space to linear space
+    vec3 albedo = pow(texture(albedoMap, TexCoord).rgb, vec3(2.2));
     float metallic  = texture(metallicMap, TexCoord).r;
     float roughness = texture(roughnessMap, TexCoord).r;
-    float ao        = texture(aoMap, TexCoord).r;
+    float ao = texture(aoMap, TexCoord).r;
 
     vec3 N = normalize(normalWorld);
     // Adjust the tangent vector to ensure it is perpendicular to the surface
@@ -80,25 +81,26 @@ void main()
     mat3 TBN = mat3(T, B, N);
     N = normalize(TBN * (texture(normalMap, TexCoord).xyz * 2.0 - 1.0));
     
-	vec3 V = normalize(camPos - posWorld);
+    vec3 V = normalize(camPos - posWorld);
 
     vec3 lightRadiances = vec3(10.0);
 
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
 
-    vec3 L = normalize(lightPos - posWorld);
+        vec3 L = normalize(lightPos - posWorld);
     vec3 H = normalize(V + L);
     float distance = length(lightPos - posWorld);
     float attenuation = 1.0 / (distance * distance);
     vec3 radiance = lightRadiances * attenuation;
 
-    float NDF = DistributionGGX(N, H, roughness);   
-    float G = GeometrySmith(N, V, L, roughness);      
     vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+    float G = GeometrySmith(N, V, L, roughness);      
+    float NDF = DistributionGGX(N, H, roughness);   
         
-    vec3 numerator = NDF * G * F; 
-    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
+    vec3 numerator = NDF * G * F;
+    // + 0.0001 to prevent divide by zero
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
     vec3 specular = numerator / denominator;
     
     vec3 kS = F;
@@ -113,7 +115,7 @@ void main()
 
     vec3 ambient = vec3(0.3) * albedo * ao;
 
-	vec3 color = ambient + directLight;
+    vec3 color = ambient + directLight;
     
     // HDR tonemapping
     color = color / (color + vec3(1.0));

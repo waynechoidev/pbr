@@ -19,7 +19,7 @@ layout(std140) uniform Vertices
 	// 196
 };
 
-layout(binding = 0) uniform sampler2D heightMap;
+uniform sampler2D heightMap;
 
 void main()
 {

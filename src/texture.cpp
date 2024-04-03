@@ -3,21 +3,22 @@
 
 Texture::Texture()
 {
-	Texture(0, GL_RGB);
+	Texture(GL_RGB);
 }
 
-Texture::Texture(int index, GLint channel)
+Texture::Texture(GLint channel)
 {
 	_textureID = 0;
-	_textureIndex = GL_TEXTURE0 + index;
 	_textureChannel = channel;
 	_width = 0;
 	_height = 0;
 	_bitDepth = 0;
 }
 
-void Texture::initialise(std::string fileLoc)
+void Texture::initialise(std::string name, std::string fileLoc)
 {
+	_name = name;
+
 	unsigned char *texData = stbi_load(fileLoc.c_str(), &_width, &_height, &_bitDepth, 0);
 	if (!texData)
 	{
@@ -41,10 +42,12 @@ void Texture::initialise(std::string fileLoc)
 	stbi_image_free(texData);
 }
 
-void Texture::use()
+void Texture::use(GLuint programId, int index)
 {
-	glActiveTexture(_textureIndex);
+	glActiveTexture(GL_TEXTURE0 + index);
 	glBindTexture(GL_TEXTURE_2D, _textureID);
+	auto uniformLoc = glGetUniformLocation(programId, _name.c_str());
+	glUniform1i(uniformLoc, index);
 }
 
 void Texture::clear()

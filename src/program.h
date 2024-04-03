@@ -23,6 +23,7 @@ public:
 	void use();
 	void bindVertexBuffers(glm::mat4 model, glm::mat4 projection, glm::mat4 view, float &heightScale);
 	void bindFragmentBuffers(glm::vec3 campos, glm::vec3 lightPos, bool useDirectLight, bool useEnvLight);
+	GLuint getId() { return _programID; }
 
 	~Program();
 
