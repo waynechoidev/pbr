@@ -10,7 +10,7 @@ public:
 	Gui(){};
 
 	void initialise(GLFWwindow *window);
-	void update(float &heightScale, bool &useDirectLight, bool &useEnvLight, float &lightPos);
+	void update(float &heightScale, bool &useDirectLight, bool &useEnvLight, float &lightPos, float *viewRotation);
 	void render();
 
 	~Gui(){};

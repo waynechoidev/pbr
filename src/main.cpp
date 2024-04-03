@@ -64,12 +64,12 @@ int main()
 	glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
 	glm::mat4 captureViews[] =
 		{
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
 			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
 			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f))};
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
 
 	HDRTexture hdrTexture = HDRTexture();
 	hdrTexture.initialise("hdrTexture", currentDir / "textures/forgotten_miniland_8k.hdr");
@@ -136,7 +136,7 @@ int main()
 
 	while (!mainWindow.getShouldClose())
 	{
-		gui.update(heightScale, useDirectLight, useEnvLight, lightPos[0]);
+		gui.update(heightScale, useDirectLight, useEnvLight, lightPos[0], camera.getRotation());
 
 		mainWindow.clear(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -154,8 +154,6 @@ int main()
 
 		sphere.draw();
 
-		gui.render();
-
 		// Background
 		glDepthFunc(GL_LEQUAL);
 		backgroundProgram.use();
@@ -164,6 +162,8 @@ int main()
 		glUniformMatrix4fv(backgroundViewLoc, 1, GL_FALSE, glm::value_ptr(camera.calculateViewMatrix()));
 		cube.draw();
 		glDepthFunc(GL_LESS);
+
+		gui.render();
 
 		glUseProgram(0);
 

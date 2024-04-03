@@ -11,13 +11,16 @@ void Gui::initialise(GLFWwindow *window)
 	ImGui_ImplOpenGL3_Init("#version 130");
 }
 
-void Gui::update(float &heightScale, bool &useDirectLight, bool &useEnvLight, float &lightPos)
+void Gui::update(float &heightScale, bool &useDirectLight, bool &useEnvLight, float &lightPos, float *viewRotation)
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
 	ImGui::Begin("Scene Control");
+
+	ImGui::Text("View");
+	ImGui::SliderFloat2("View rotation", viewRotation, -3.14f, 3.14f);
 
 	// Print framerate
 	ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
