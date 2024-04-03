@@ -20,10 +20,13 @@ public:
 
 	std::string readFile(std::string fileLocation);
 
-	void use();
+	void genVertexBuffers();
+	void genFragmentBuffers();
 	void bindVertexBuffers(glm::mat4 model, glm::mat4 projection, glm::mat4 view, float &heightScale);
 	void bindFragmentBuffers(glm::vec3 campos, glm::vec3 lightPos, bool useDirectLight, bool useEnvLight);
 	GLuint getId() { return _programID; }
+
+	void use();
 
 	~Program();
 
@@ -33,7 +36,5 @@ private:
 
 	void compileShader(std::string vertexCode, std::string fragmentCode);
 	void addShader(GLuint theProgram, std::string shaderCode, GLenum shaderType);
-	void genVertexBuffers();
-	void genFragmentBuffers();
 	void clear();
 };

@@ -15,7 +15,7 @@ Texture::Texture(GLint channel)
 	_bitDepth = 0;
 }
 
-void Texture::initialise(std::string name, std::string fileLoc)
+void Texture::initialise(std::string name, std::string fileLoc, bool isHDR)
 {
 	_name = name;
 
@@ -31,10 +31,10 @@ void Texture::initialise(std::string name, std::string fileLoc)
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, _textureChannel, _width, _height, 0, _textureChannel, GL_UNSIGNED_BYTE, texData);
+	glTexImage2D(GL_TEXTURE_2D, 0, isHDR ? GL_RGB16F : _textureChannel, _width, _height, 0, _textureChannel, isHDR ? GL_FLOAT : GL_UNSIGNED_BYTE, texData);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	glBindTexture(GL_TEXTURE_2D, 0);

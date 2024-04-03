@@ -1,7 +1,6 @@
 #pragma once
 
 #include <iostream>
-
 #include <GL/glew.h>
 
 class Texture
@@ -10,7 +9,7 @@ public:
 	Texture();
 	Texture(GLint channel);
 
-	void initialise(std::string name, std::string fileLoc);
+	void initialise(std::string name, std::string fileLoc, bool isHDR);
 	void use(GLuint programId, int index);
 	void clear();
 

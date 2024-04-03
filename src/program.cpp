@@ -12,9 +12,6 @@ void Program::createFromFiles(std::string vertexLocation, std::string fragmentLo
 	std::string fragmentCode = readFile(fragmentLocation);
 
 	compileShader(vertexCode, fragmentCode);
-
-	genVertexBuffers();
-	genFragmentBuffers();
 }
 
 std::string Program::readFile(std::string fileLocation)
