@@ -22,10 +22,10 @@ layout(binding = 2) uniform sampler2D normalMap;
 layout(binding = 3) uniform sampler2D metallicMap;
 layout(binding = 4) uniform sampler2D roughnessMap;
 layout(binding = 5) uniform sampler2D aoMap;
-
-layout(binding = 6) uniform samplerCube irradianceCubemap;
-layout(binding = 7) uniform samplerCube preFilteredEnvmap;
 layout(binding = 8) uniform sampler2D brdfLUT;
+
+layout(binding = 7) uniform samplerCube envCubemap;
+layout(binding = 6) uniform samplerCube irradianceCubemap;
 
 const float PI = 3.14159265359;
 
@@ -135,7 +135,7 @@ void main()
 
     // sample both the pre-filter map and the BRDF lut and combine them together as per the Split-Sum approximation to get the IBL specular part.
     const float MAX_REFLECTION_LOD = 4.0;
-    vec3 prefilteredColor = textureLod(preFilteredEnvmap, R,  roughness * MAX_REFLECTION_LOD).rgb;    
+    vec3 prefilteredColor = textureLod(envCubemap, R,  roughness * MAX_REFLECTION_LOD).rgb;    
     vec2 brdf  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
     specular = prefilteredColor * (F * brdf.x + brdf.y);
 

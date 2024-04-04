@@ -41,9 +41,8 @@ const GLfloat SPHERE_SCALE = 1.0;
 const GLint WIDTH = 1920;
 const GLint HEIGHT = 1080;
 
-GLint envCubeSize = 2048;
+GLint envCubeSize = 4096;
 GLint irradianceSize = 32;
-GLint preFilteredEnvmapSize = 512;
 GLint brdfSize = 512;
 
 // Control
@@ -87,13 +86,6 @@ int main()
 	GLuint irradianceProgramId = irradianceProgram.getId();
 	GLuint irradianceViewLoc = glGetUniformLocation(irradianceProgramId, "view");
 	GLuint irradianceProjectionLoc = glGetUniformLocation(irradianceProgramId, "projection");
-
-	Program preFilteredEnvProgram = Program();
-	preFilteredEnvProgram.createFromFiles(currentDir / "shaders/cubemap.vert", currentDir / "shaders/pre-filtered-envmap.frag");
-	GLuint preFilteredEnvProgramId = preFilteredEnvProgram.getId();
-	GLuint preFilteredEnvViewLoc = glGetUniformLocation(preFilteredEnvProgramId, "view");
-	GLuint preFilteredEnvProjectionLoc = glGetUniformLocation(preFilteredEnvProgramId, "projection");
-	GLuint preFilteredEnvRoughnessLoc = glGetUniformLocation(preFilteredEnvProgramId, "roughness");
 
 	Program brdfProgram = Program();
 	brdfProgram.createFromFiles(currentDir / "shaders/brdf.vert", currentDir / "shaders/brdf.frag");
@@ -173,44 +165,6 @@ int main()
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	// Specular cubemap
-	Cubemap preFilteredEnvmap = Cubemap();
-	preFilteredEnvmap.initialize(preFilteredEnvmapSize, "preFilteredEnvmap");
-
-	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, preFilteredEnvmapSize, preFilteredEnvmapSize);
-
-	preFilteredEnvProgram.use();
-	glUniformMatrix4fv(preFilteredEnvProjectionLoc, 1, GL_FALSE, glm::value_ptr(captureProjection));
-	envCubemap.use(preFilteredEnvProgramId, 0);
-
-	glViewport(0, 0, preFilteredEnvmapSize, preFilteredEnvmapSize); // don't forget to configure the viewport to the capture dimensions.
-	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	unsigned int maxMipLevels = 5;
-	for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
-	{
-		// reisze framebuffer according to mip-level size.
-		unsigned int mipWidth = static_cast<unsigned int>(preFilteredEnvmapSize * std::pow(0.5, mip));
-		unsigned int mipHeight = static_cast<unsigned int>(preFilteredEnvmapSize * std::pow(0.5, mip));
-		glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
-		glViewport(0, 0, mipWidth, mipHeight);
-
-		float roughness = (float)mip / (float)(maxMipLevels - 1);
-		glUniform1f(preFilteredEnvRoughnessLoc, roughness);
-
-		for (unsigned int i = 0; i < 6; ++i)
-		{
-			glUniformMatrix4fv(preFilteredEnvViewLoc, 1, GL_FALSE, glm::value_ptr(captureViews[i]));
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, preFilteredEnvmap.getId(), mip);
-
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			cube.draw();
-		}
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 	// BRDF
 	HDRTexture brdfLUT = HDRTexture();
 	brdfLUT.initialise("brdfLUT", brdfSize);
@@ -248,12 +202,12 @@ int main()
 	metallicMap.use(mainProgramId, 3);
 	roughnessMap.use(mainProgramId, 4);
 	aoMap.use(mainProgramId, 5);
-	irradianceCubemap.use(mainProgramId, 6);
-	preFilteredEnvmap.use(mainProgramId, 7);
-	brdfLUT.use(mainProgramId, 8);
+	brdfLUT.use(mainProgramId, 6);
+	envCubemap.use(mainProgramId, 7);
+	irradianceCubemap.use(mainProgramId, 8);
 
 	backgroundProgram.use();
-	preFilteredEnvmap.use(backgroundProgramId, 0);
+	envCubemap.use(backgroundProgramId, 0);
 
 	glUseProgram(0);
 
