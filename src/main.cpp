@@ -42,7 +42,7 @@ const GLint WIDTH = 1920;
 const GLint HEIGHT = 1080;
 
 GLint envCubeSize = 4096;
-GLint irradianceSize = 32;
+GLint irradianceSize = 128;
 GLint brdfSize = 512;
 
 // Control
