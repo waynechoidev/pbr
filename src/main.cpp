@@ -22,6 +22,7 @@
 #include "quad.h"
 
 std::string hdrTextureSrc = "textures/air_museum_playground_4k.hdr";
+// std::string hdrTextureSrc = "textures/vignaioli_night_4k.hdr";
 
 std::string heightMapSrc = "textures/antique-grate1-height.png";
 GLint heightMapChanel = GL_RGB;
@@ -41,7 +42,7 @@ const GLint WIDTH = 1920;
 const GLint HEIGHT = 1080;
 
 GLint envCubeSize = 2048;
-GLint irradianceSize = 512;
+GLint irradianceSize = 32;
 GLint specularSize = 512;
 GLint brdfSize = 512;
 
@@ -252,7 +253,7 @@ int main()
 	brdfLUT.use(mainProgramId, 8);
 
 	backgroundProgram.use();
-	envCubemap.use(backgroundProgramId, 0);
+	specularCubemap.use(backgroundProgramId, 0);
 
 	glUseProgram(0);
 
