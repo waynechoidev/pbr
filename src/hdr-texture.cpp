@@ -36,6 +36,23 @@ void HDRTexture::initialise(std::string name, std::string fileLoc)
 	stbi_image_free(texData);
 }
 
+void HDRTexture::initialise(std::string name, GLint size)
+{
+	_name = name;
+
+	glGenTextures(1, &_textureID);
+	glBindTexture(GL_TEXTURE_2D, _textureID);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, size, size, 0, GL_RG, GL_FLOAT, 0);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void HDRTexture::use(GLuint programId, int index)
 {
 	glActiveTexture(GL_TEXTURE0 + index);

@@ -7,7 +7,7 @@ class Cubemap
 {
 public:
     Cubemap(){};
-    void initialize(int size);
+    void initialize(int size, std::string name);
 
     GLuint getId() { return _textureID; }
     void use(GLuint programId, int index);

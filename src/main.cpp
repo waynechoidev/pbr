@@ -19,10 +19,39 @@
 #include "cube.h"
 #include "hdr-texture.h"
 #include "ray-picking.h"
+#include "quad.h"
+
+std::string hdrTextureSrc = "textures/air_museum_playground_4k.hdr";
+
+std::string heightMapSrc = "textures/antique-grate1-height.png";
+GLint heightMapChanel = GL_RGB;
+std::string albedoMapSrc = "textures/antique-grate1-albedo.png";
+GLint albedoMapChanel = GL_RGB;
+std::string normalMapSrc = "textures/antique-grate1-normal-dx.png";
+GLint normalMapChanel = GL_RGB;
+std::string metallicMapSrc = "textures/antique-grate1-metallic.png";
+GLint metallicMapChanel = GL_RGB;
+std::string roughnessMapSrc = "textures/antique-grate1-roughness.png";
+GLint roughnessMapChanel = GL_RGB;
+std::string aoMapSrc = "textures/antique-grate1-ao.png";
+GLint aoMapChanel = GL_RGB;
 
 const GLfloat SPHERE_SCALE = 1.0;
 const GLint WIDTH = 1920;
 const GLint HEIGHT = 1080;
+
+GLint envCubeSize = 2048;
+GLint irradianceSize = 512;
+GLint specularSize = 512;
+GLint brdfSize = 512;
+
+// Control
+bool useDirectLight = true;
+bool useEnvLight = true;
+float heightScale = 0.03;
+glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 2.0f);
+bool dragStartFlag = false;
+glm::vec3 prevMouseRayVector = glm::vec3(0.0f, 1.0f, 0.0f);
 
 int main()
 {
@@ -36,6 +65,7 @@ int main()
 	sphere.initialise();
 
 	Cube cube = Cube();
+	Quad quad = Quad();
 
 	std::filesystem::path currentDir = std::filesystem::path(__FILE__).parent_path();
 
@@ -51,6 +81,22 @@ int main()
 	GLuint equirectangularToCubemapViewLoc = glGetUniformLocation(equirectangularToCubemapProgramId, "view");
 	GLuint equirectangularToCubemapProjectionLoc = glGetUniformLocation(equirectangularToCubemapProgramId, "projection");
 
+	Program irradianceProgram = Program();
+	irradianceProgram.createFromFiles(currentDir / "shaders/cubemap.vert", currentDir / "shaders/irradiance.frag");
+	GLuint irradianceProgramId = irradianceProgram.getId();
+	GLuint irradianceViewLoc = glGetUniformLocation(irradianceProgramId, "view");
+	GLuint irradianceProjectionLoc = glGetUniformLocation(irradianceProgramId, "projection");
+
+	Program specularProgram = Program();
+	specularProgram.createFromFiles(currentDir / "shaders/cubemap.vert", currentDir / "shaders/specular.frag");
+	GLuint specularProgramId = specularProgram.getId();
+	GLuint specularViewLoc = glGetUniformLocation(specularProgramId, "view");
+	GLuint specularProjectionLoc = glGetUniformLocation(specularProgramId, "projection");
+	GLuint specularRoughnessLoc = glGetUniformLocation(specularProgramId, "roughness");
+
+	Program brdfProgram = Program();
+	brdfProgram.createFromFiles(currentDir / "shaders/brdf.vert", currentDir / "shaders/brdf.frag");
+
 	Program backgroundProgram = Program();
 	backgroundProgram.createFromFiles(currentDir / "shaders/background.vert", currentDir / "shaders/background.frag");
 	GLuint backgroundProgramId = backgroundProgram.getId();
@@ -62,12 +108,6 @@ int main()
 	unsigned int captureRBO;
 	glGenFramebuffers(1, &captureFBO);
 	glGenRenderbuffers(1, &captureRBO);
-
-	int bufferSize = 4096;
-	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, bufferSize, bufferSize);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
 
 	// set up projection and view matrices for capturing data onto the 6 cubemap face directions
 	glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
@@ -81,16 +121,22 @@ int main()
 			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
 
 	HDRTexture hdrTexture = HDRTexture();
-	hdrTexture.initialise("hdrTexture", currentDir / "textures/forgotten_miniland_8k.hdr");
+	hdrTexture.initialise("hdrTexture", currentDir / hdrTextureSrc);
 
+	// Env cube map
 	Cubemap envCubemap = Cubemap();
-	envCubemap.initialize(bufferSize);
+	envCubemap.initialize(envCubeSize, "envCubemap");
+
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, envCubeSize, envCubeSize);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
 
 	equirectangularToCubemapProgram.use();
 	glUniformMatrix4fv(equirectangularToCubemapProjectionLoc, 1, GL_FALSE, glm::value_ptr(captureProjection));
 	hdrTexture.use(equirectangularToCubemapProgramId, 0);
 
-	glViewport(0, 0, bufferSize, bufferSize); // don't forget to configure the viewport to the capture dimensions.
+	glViewport(0, 0, envCubeSize, envCubeSize); // don't forget to configure the viewport to the capture dimensions.
 	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
 	for (unsigned int i = 0; i < 6; ++i)
 	{
@@ -102,18 +148,97 @@ int main()
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	Texture heightMap = Texture(GL_RGB);
-	heightMap.initialise("heightMap", currentDir / "textures/antique-grate1-height.png", false);
-	Texture albedoMap = Texture(GL_RGB);
-	albedoMap.initialise("albedoMap", currentDir / "textures/antique-grate1-albedo.png", false);
-	Texture normalMap = Texture(GL_RGB);
-	normalMap.initialise("normalMap", currentDir / "textures/antique-grate1-normal-dx.png", false);
-	Texture metallicMap = Texture(GL_RGB);
-	metallicMap.initialise("metallicMap", currentDir / "textures/antique-grate1-metallic.png", false);
-	Texture roughnessMap = Texture(GL_RGB);
-	roughnessMap.initialise("roughnessMap", currentDir / "textures/antique-grate1-roughness.png", false);
-	Texture aoMap = Texture(GL_RGB);
-	aoMap.initialise("aoMap", currentDir / "textures/antique-grate1-ao.png", false);
+	// Irradiance cubemap
+	Cubemap irradianceCubemap = Cubemap();
+	irradianceCubemap.initialize(irradianceSize, "irradianceCubemap");
+
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, irradianceSize, irradianceSize);
+
+	irradianceProgram.use();
+	glUniformMatrix4fv(irradianceProjectionLoc, 1, GL_FALSE, glm::value_ptr(captureProjection));
+	envCubemap.use(irradianceProgramId, 0);
+
+	glViewport(0, 0, irradianceSize, irradianceSize); // don't forget to configure the viewport to the capture dimensions.
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+	for (unsigned int i = 0; i < 6; ++i)
+	{
+		glUniformMatrix4fv(irradianceViewLoc, 1, GL_FALSE, glm::value_ptr(captureViews[i]));
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceCubemap.getId(), 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		cube.draw();
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Specular cubemap
+	Cubemap specularCubemap = Cubemap();
+	specularCubemap.initialize(specularSize, "specularCubemap");
+
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, specularSize, specularSize);
+
+	specularProgram.use();
+	glUniformMatrix4fv(specularProjectionLoc, 1, GL_FALSE, glm::value_ptr(captureProjection));
+	envCubemap.use(specularProgramId, 0);
+
+	glViewport(0, 0, specularSize, specularSize); // don't forget to configure the viewport to the capture dimensions.
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+	unsigned int maxMipLevels = 5;
+	for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
+	{
+		// reisze framebuffer according to mip-level size.
+		unsigned int mipWidth = static_cast<unsigned int>(specularSize * std::pow(0.5, mip));
+		unsigned int mipHeight = static_cast<unsigned int>(specularSize * std::pow(0.5, mip));
+		glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
+		glViewport(0, 0, mipWidth, mipHeight);
+
+		float roughness = (float)mip / (float)(maxMipLevels - 1);
+		glUniform1f(specularRoughnessLoc, roughness);
+
+		for (unsigned int i = 0; i < 6; ++i)
+		{
+			glUniformMatrix4fv(specularViewLoc, 1, GL_FALSE, glm::value_ptr(captureViews[i]));
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, specularCubemap.getId(), mip);
+
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			cube.draw();
+		}
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// BRDF
+	HDRTexture brdfLUT = HDRTexture();
+	brdfLUT.initialise("brdfLUT", brdfSize);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfLUT.getId(), 0);
+
+	glViewport(0, 0, brdfSize, brdfSize);
+	brdfProgram.use();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	quad.draw();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glViewport(0, 0, mainWindow.getBufferWidth(), mainWindow.getBufferHeight());
+
+	Texture heightMap = Texture(heightMapChanel);
+	heightMap.initialise("heightMap", currentDir / heightMapSrc, false);
+	Texture albedoMap = Texture(albedoMapChanel);
+	albedoMap.initialise("albedoMap", currentDir / albedoMapSrc, false);
+	Texture normalMap = Texture(normalMapChanel);
+	normalMap.initialise("normalMap", currentDir / normalMapSrc, false);
+	Texture metallicMap = Texture(metallicMapChanel);
+	metallicMap.initialise("metallicMap", currentDir / metallicMapSrc, false);
+	Texture roughnessMap = Texture(roughnessMapChanel);
+	roughnessMap.initialise("roughnessMap", currentDir / roughnessMapSrc, false);
+	Texture aoMap = Texture(aoMapChanel);
+	aoMap.initialise("aoMap", currentDir / aoMapSrc, false);
 
 	mainProgram.use();
 	heightMap.use(mainProgramId, 0);
@@ -122,6 +247,14 @@ int main()
 	metallicMap.use(mainProgramId, 3);
 	roughnessMap.use(mainProgramId, 4);
 	aoMap.use(mainProgramId, 5);
+	irradianceCubemap.use(mainProgramId, 6);
+	specularCubemap.use(mainProgramId, 7);
+	brdfLUT.use(mainProgramId, 8);
+
+	backgroundProgram.use();
+	envCubemap.use(backgroundProgramId, 0);
+
+	glUseProgram(0);
 
 	// Model
 	glm::vec3 translation = glm::vec3(0.0f);
@@ -134,16 +267,6 @@ int main()
 
 	// View
 	Camera camera = Camera(glm::vec3(0.0f, 0.0f, 4.5f), glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3(0.0f, 0.0f, -1.0f));
-
-	// Control
-	bool useDirectLight = true;
-	bool useEnvLight = true;
-	float heightScale = 0.03;
-	glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 2.0f);
-	bool dragStartFlag = false;
-	glm::vec3 prevMouseRayVector = glm::vec3(0.0f, 1.0f, 0.0f);
-
-	glViewport(0, 0, mainWindow.getBufferWidth(), mainWindow.getBufferHeight());
 
 	while (!mainWindow.getShouldClose())
 	{
@@ -180,7 +303,7 @@ int main()
 			dragStartFlag = true;
 		}
 
-		gui.update(heightScale, useDirectLight, useEnvLight, lightPos[0], camera.getRotation());
+		gui.update(heightScale, useDirectLight, useEnvLight, lightPos[0], &camera.getRotation()[1]);
 
 		mainWindow.clear(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -199,7 +322,6 @@ int main()
 		// Background
 		glDepthFunc(GL_LEQUAL);
 		backgroundProgram.use();
-		envCubemap.use(backgroundProgramId, 0);
 		glUniformMatrix4fv(backgroundProjectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 		glUniformMatrix4fv(backgroundViewLoc, 1, GL_FALSE, glm::value_ptr(camera.calculateViewMatrix()));
 		cube.draw();

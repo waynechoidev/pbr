@@ -1,6 +1,5 @@
 #pragma once
-
-#include "mesh.h"
+#include <GL/glew.h>
 
 class Cube
 {

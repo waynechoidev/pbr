@@ -9,7 +9,9 @@ public:
 	HDRTexture();
 
 	void initialise(std::string name, std::string fileLoc);
+	void initialise(std::string name, GLint size);
 	void use(GLuint programId, int index);
+	GLuint getId() { return _textureID; }
 	void clear();
 
 	~HDRTexture();

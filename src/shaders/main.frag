@@ -17,11 +17,15 @@ layout(std140) uniform Fragment
                           //total    32
 };
 
-uniform sampler2D albedoMap;
-uniform sampler2D normalMap;
-uniform sampler2D metallicMap;
-uniform sampler2D roughnessMap;
-uniform sampler2D aoMap;
+layout(binding = 1) uniform sampler2D albedoMap;
+layout(binding = 2) uniform sampler2D normalMap;
+layout(binding = 3) uniform sampler2D metallicMap;
+layout(binding = 4) uniform sampler2D roughnessMap;
+layout(binding = 5) uniform sampler2D aoMap;
+
+layout(binding = 6) uniform samplerCube irradianceCubemap;
+layout(binding = 7) uniform samplerCube specularCubemap;
+layout(binding = 8) uniform sampler2D brdfLUT;
 
 const float PI = 3.14159265359;
 
@@ -65,6 +69,11 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}   
+
 void main()
 {
     // Apply gamma correction to the sampled albedo texture to convert it from sRGB space to linear space
@@ -82,6 +91,7 @@ void main()
     N = normalize(TBN * (texture(normalMap, TexCoord).xyz * 2.0 - 1.0));
     
     vec3 V = normalize(camPos - posWorld);
+    vec3 R = reflect(-V, N); 
 
     vec3 lightRadiances = vec3(10.0);
 
@@ -113,9 +123,27 @@ void main()
 
     vec3 directLight = (kD * albedo / PI + specular) * radiance * NdotL;        
 
-    vec3 ambient = vec3(0.3) * albedo * ao;
+    // ambient lighting (we now use IBL as the ambient term)
+    F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
 
-    vec3 color = ambient + directLight;
+    kS = F;
+    kD = 1.0 - kS;
+    kD *= 1.0 - metallic;
+
+    vec3 irradiance = texture(irradianceCubemap, N).rgb;
+    vec3 diffuse = irradiance * albedo;
+
+    // sample both the pre-filter map and the BRDF lut and combine them together as per the Split-Sum approximation to get the IBL specular part.
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 prefilteredColor = textureLod(specularCubemap, R,  roughness * MAX_REFLECTION_LOD).rgb;    
+    vec2 brdf  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+    specular = prefilteredColor * (F * brdf.x + brdf.y);
+
+    vec3 ambient = (kD * diffuse + specular) * ao;
+
+    vec3 color = vec3(0.0);
+    if(useDirectLight) color += directLight;
+    if(useEnvLight) color += ambient;
     
     // HDR tonemapping
     color = color / (color + vec3(1.0));
