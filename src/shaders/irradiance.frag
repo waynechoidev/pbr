@@ -5,18 +5,19 @@ in vec3 WorldPos;
 uniform samplerCube envCubemap;
 
 const float PI = 3.14159265359;
+const int sampleCount = 512; // Sample count as a constant variable
 
 void main()
 {       
     vec3 N = normalize(WorldPos);
 
     const vec3 up = vec3(0.0, 1.0, 0.0);
-    const float invSampleCount = 1.0 / 512.0; // Can be adjusted based on the number of samples.
+    const float invSampleCount = 1.0 / float(sampleCount); // Using the sampleCount variable
 
     vec3 irradiance = vec3(0.0);
 
     // Sampling from the cubemap using importance sampling
-    for (int i = 0; i < 512; ++i) {
+    for (int i = 0; i < sampleCount; ++i) {
         // Sampling direction for importance sampling
         vec3 sampleDir = normalize(texture(envCubemap, N).rgb * 2.0 - 1.0);
 
