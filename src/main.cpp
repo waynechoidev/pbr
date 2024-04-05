@@ -22,7 +22,6 @@
 #include "quad.h"
 
 std::string hdrTextureSrc = "textures/air_museum_playground_4k.hdr";
-// std::string hdrTextureSrc = "textures/vignaioli_night_4k.hdr";
 
 std::string heightMapSrc = "textures/antique-grate1-height.png";
 GLint heightMapChanel = GL_RGB;
